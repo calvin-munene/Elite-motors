@@ -1,10 +1,10 @@
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { useListCars, useDeleteCar } from "@workspace/api-client-react";
+import { useListCars, useDeleteCar, useUpdateCar } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Edit, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Search, Edit, Trash2, ExternalLink, CarFront, Tag } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ export default function AdminCars() {
   const [search, setSearch] = useState("");
   const { data: inventoryData, refetch } = useListCars({ limit: 100, search });
   const deleteCar = useDeleteCar();
+  const updateCar = useUpdateCar();
   const { toast } = useToast();
 
   const handleDelete = (id: number) => {
@@ -30,7 +31,50 @@ export default function AdminCars() {
     }
   };
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
+  const handleMarkSold = (car: any) => {
+    if (car.availability === "sold") {
+      if (!confirm("Mark this vehicle as available again?")) return;
+      updateCar.mutate({
+        id: car.id,
+        data: {
+          title: car.title, make: car.make, model: car.model, year: car.year,
+          price: car.price, mileage: car.mileage, transmission: car.transmission,
+          fuelType: car.fuelType, bodyType: car.bodyType, color: car.color,
+          condition: car.condition, availability: "available",
+          isFeatured: car.isFeatured, isPublished: car.isPublished,
+          shortDescription: car.shortDescription || "", description: car.description || "",
+        } as any
+      }, {
+        onSuccess: () => { toast({ title: "Marked as Available" }); refetch(); },
+        onError: () => toast({ title: "Update failed", variant: "destructive" }),
+      });
+    } else {
+      if (!confirm(`Mark "${car.year} ${car.title}" as SOLD?`)) return;
+      updateCar.mutate({
+        id: car.id,
+        data: {
+          title: car.title, make: car.make, model: car.model, year: car.year,
+          price: car.price, mileage: car.mileage, transmission: car.transmission,
+          fuelType: car.fuelType, bodyType: car.bodyType, color: car.color,
+          condition: car.condition, availability: "sold",
+          isFeatured: car.isFeatured, isPublished: car.isPublished,
+          shortDescription: car.shortDescription || "", description: car.description || "",
+        } as any
+      }, {
+        onSuccess: () => { toast({ title: "Marked as Sold" }); refetch(); },
+        onError: () => toast({ title: "Update failed", variant: "destructive" }),
+      });
+    }
+  };
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(price * 130);
+
+  const availabilityStyle = (a: string) => {
+    if (a === "available") return "border-green-500/30 text-green-400 bg-green-500/5";
+    if (a === "reserved") return "border-orange-500/30 text-orange-400 bg-orange-500/5";
+    return "border-red-500/30 text-red-400 bg-red-500/5";
+  };
 
   return (
     <AdminLayout>
@@ -50,8 +94,8 @@ export default function AdminCars() {
         <div className="p-4 border-b border-white/5 flex gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <Input 
-              placeholder="Search by make, model, or VIN..." 
+            <Input
+              placeholder="Search by make, model, or VIN..."
               className="pl-9 bg-background border-white/10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -64,7 +108,7 @@ export default function AdminCars() {
             <TableHeader className="bg-background/50">
               <TableRow className="border-white/5 hover:bg-transparent">
                 <TableHead className="text-gray-400 font-bold">Vehicle</TableHead>
-                <TableHead className="text-gray-400 font-bold">Price</TableHead>
+                <TableHead className="text-gray-400 font-bold">Price (KES)</TableHead>
                 <TableHead className="text-gray-400 font-bold">Status</TableHead>
                 <TableHead className="text-gray-400 font-bold">Added</TableHead>
                 <TableHead className="text-right text-gray-400 font-bold">Actions</TableHead>
@@ -77,7 +121,7 @@ export default function AdminCars() {
                 </TableRow>
               ) : (
                 inventoryData?.cars.map((car) => (
-                  <TableRow key={car.id} className="border-white/5 hover:bg-white/5">
+                  <TableRow key={car.id} className={`border-white/5 hover:bg-white/5 ${car.availability === "sold" ? "opacity-60" : ""}`}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded bg-secondary overflow-hidden shrink-0">
@@ -90,16 +134,20 @@ export default function AdminCars() {
                         <div>
                           <p className="font-bold text-white">{car.year} {car.title}</p>
                           <p className="text-xs text-gray-500">VIN: {car.vin || 'N/A'}</p>
+                          {(car as any).isJapaneseImport && (
+                            <span className="text-[10px] text-blue-400 font-semibold">JDM Import</span>
+                          )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-white">{formatPrice(car.price)}</div>
+                      <div className="font-medium text-white text-sm">{formatPrice(car.price)}</div>
+                      <div className="text-xs text-gray-500">${car.price.toLocaleString()} USD</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1 items-start">
-                        <Badge variant="outline" className={`text-[10px] ${car.availability === 'available' ? 'border-green-500/30 text-green-400' : car.availability === 'reserved' ? 'border-orange-500/30 text-orange-400' : 'border-red-500/30 text-red-400'}`}>
-                          {car.availability}
+                        <Badge variant="outline" className={`text-[10px] ${availabilityStyle(car.availability)}`}>
+                          {car.availability === "sold" ? "SOLD" : car.availability.charAt(0).toUpperCase() + car.availability.slice(1)}
                         </Badge>
                         {!car.isPublished && (
                           <Badge variant="outline" className="text-[10px] border-gray-500/30 text-gray-400">Draft</Badge>
@@ -113,20 +161,34 @@ export default function AdminCars() {
                       {format(new Date(car.createdAt), 'MMM d, yyyy')}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => handleMarkSold(car)}
+                          title={car.availability === "sold" ? "Mark as Available" : "Mark as Sold"}
+                          className={`h-8 w-8 rounded flex items-center justify-center transition-colors ${
+                            car.availability === "sold"
+                              ? "text-green-400 hover:text-green-300 hover:bg-green-400/10"
+                              : "text-orange-400 hover:text-orange-300 hover:bg-orange-400/10"
+                          }`}
+                        >
+                          <Tag className="w-4 h-4" />
+                        </button>
                         <Link href={`/cars/${car.slug}`}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10" title="View Public Page">
+                          <button className="h-8 w-8 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors" title="View Public Page">
                             <ExternalLink className="w-4 h-4" />
-                          </Button>
+                          </button>
                         </Link>
                         <Link href={`/admin/cars/${car.id}/edit`}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
+                          <button className="h-8 w-8 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
                             <Edit className="w-4 h-4" />
-                          </Button>
+                          </button>
                         </Link>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10" onClick={() => handleDelete(car.id)}>
+                        <button
+                          className="h-8 w-8 rounded flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
+                          onClick={() => handleDelete(car.id)}
+                        >
                           <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </button>
                       </div>
                     </TableCell>
                   </TableRow>

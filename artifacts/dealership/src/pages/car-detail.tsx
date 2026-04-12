@@ -3,7 +3,6 @@ import { useParams, Link } from "wouter";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
-import { AIChatbot } from "@/components/AIChatbot";
 import { CarCard } from "@/components/CarCard";
 import { Car360Viewer } from "@/components/Car360Viewer";
 import { Button } from "@/components/ui/button";
@@ -409,7 +408,6 @@ export default function CarDetail() {
 
       <Footer />
       <FloatingWhatsApp />
-      <AIChatbot />
     </div>
   );
 }

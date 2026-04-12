@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
-import { AIChatbot } from "@/components/AIChatbot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -256,7 +255,6 @@ export default function KRACalculator() {
 
       <Footer />
       <FloatingWhatsApp />
-      <AIChatbot />
     </div>
   );
 }
