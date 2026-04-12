@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Image } from "lucide-react";
+import { GalleryEditor } from "@/components/admin/GalleryEditor";
 
 const formSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -241,6 +243,16 @@ export default function AdminNewCar() {
                 <FormLabel className="text-xs uppercase tracking-wider text-gray-400 font-bold">Full Description</FormLabel>
                 <FormControl><Textarea className="bg-background border-white/10 text-white" rows={6} {...field} /></FormControl>
                 <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Gallery Images */}
+            <FormField control={form.control} name="gallery" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs uppercase tracking-wider text-gray-400 font-bold flex items-center gap-2">
+                  <Image className="w-4 h-4" /> Vehicle Photos (Gallery)
+                </FormLabel>
+                <GalleryEditor value={field.value || []} onChange={field.onChange} />
               </FormItem>
             )} />
 

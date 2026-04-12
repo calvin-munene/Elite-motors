@@ -11,11 +11,23 @@ import { X, Plus, Check, Minus, Trophy, Share2 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { Car } from "@workspace/api-client-react";
 
-const SPEC_SECTIONS = [
+interface SpecRow {
+  label: string;
+  key: string;
+  format?: string;
+  bestFn?: (vals: number[]) => number;
+}
+
+interface SpecSection {
+  title: string;
+  rows: SpecRow[];
+}
+
+const SPEC_SECTIONS: SpecSection[] = [
   {
     title: "Price & Value",
     rows: [
-      { label: "Asking Price", key: "price", format: "price", bestFn: (vals: number[]) => Math.min(...vals) },
+      { label: "Asking Price", key: "price", format: "price", bestFn: (vals) => Math.min(...vals) },
       { label: "Condition", key: "condition" },
       { label: "Availability", key: "availability" },
       { label: "Financing Available", key: "financingAvailable", format: "boolean" },
@@ -24,7 +36,7 @@ const SPEC_SECTIONS = [
   {
     title: "Basic Information",
     rows: [
-      { label: "Year", key: "year", bestFn: (vals: number[]) => Math.max(...vals) },
+      { label: "Year", key: "year", bestFn: (vals) => Math.max(...vals) },
       { label: "Make", key: "make" },
       { label: "Model", key: "model" },
       { label: "Body Type", key: "bodyType" },
@@ -39,7 +51,7 @@ const SPEC_SECTIONS = [
       { label: "Transmission", key: "transmission" },
       { label: "Fuel Type", key: "fuelType" },
       { label: "Drivetrain", key: "drivetrain" },
-      { label: "Mileage", key: "mileage", format: "mileage", bestFn: (vals: number[]) => Math.min(...vals) },
+      { label: "Mileage", key: "mileage", format: "mileage", bestFn: (vals) => Math.min(...vals) },
     ],
   },
   {
