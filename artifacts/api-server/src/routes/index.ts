@@ -12,6 +12,7 @@ import adminRouter from "./admin";
 import tradeInsRouter from "./trade-ins";
 import financingRouter from "./financing";
 import openaiRouter from "./openai/index";
+import newsletterRouter from "./newsletter";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(adminRouter);
 router.use(tradeInsRouter);
 router.use(financingRouter);
 router.use(openaiRouter);
+router.use(newsletterRouter);
 
 export default router;

@@ -19,7 +19,7 @@ export default function Home() {
   const { data: settings } = useGetSettings();
 
   const defaultCategoryImages = {
-    SUV: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=600",
+    SUV: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800",
     Luxury: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=600",
     Sports: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=600",
     Sedan: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=600",

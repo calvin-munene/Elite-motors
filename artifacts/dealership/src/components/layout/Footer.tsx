@@ -1,15 +1,40 @@
 import { Link } from "wouter";
-import { Facebook, Instagram, Twitter, Youtube, MapPin, Phone, Mail, Clock } from "lucide-react";
+import { Facebook, Instagram, Twitter, Youtube, MapPin, Phone, Mail, Clock, CheckCircle2, Loader2 } from "lucide-react";
 import { useGetSettings } from "@workspace/api-client-react";
+import { useState } from "react";
 
 export function Footer() {
   const { data: settings } = useGetSettings();
+  const [email, setEmail] = useState("");
+  const [subState, setSubState] = useState<"idle" | "loading" | "success" | "already" | "error">("idle");
 
   const phone = settings?.phone || "+1 (555) 234-5678";
-  const email = settings?.email || "sales@autoelitemotors.com";
+  const contactEmail = settings?.email || "sales@autoelitemotors.co.ke";
   const address = settings?.address || "4820 Automotive Boulevard";
   const city = settings?.city || "Los Angeles, CA 90001";
   const hours = settings?.openingHours || "Mon-Sat 9AM-7PM, Sun 11AM-5PM";
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !email.includes("@")) return;
+    setSubState("loading");
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSubState(data.message === "already_subscribed" ? "already" : "success");
+        setEmail("");
+      } else {
+        setSubState("error");
+      }
+    } catch {
+      setSubState("error");
+    }
+  };
 
   return (
     <footer className="bg-[#0a0a0a] pt-20 pb-10 border-t border-white/5">
@@ -95,7 +120,7 @@ export function Footer() {
               </li>
               <li className="flex items-center">
                 <Mail className="w-5 h-5 text-primary mr-3 shrink-0" />
-                <span>{email}</span>
+                <span>{contactEmail}</span>
               </li>
               <li className="flex items-start">
                 <Clock className="w-5 h-5 text-primary mr-3 shrink-0" />
@@ -110,19 +135,43 @@ export function Footer() {
             <p className="text-sm text-gray-400 mb-4">
               Subscribe to receive updates on new arrivals, special offers, and events.
             </p>
-            <form className="flex flex-col space-y-3" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary transition-colors"
-              />
-              <button
-                type="submit"
-                className="bg-primary hover:bg-primary/90 text-white font-bold text-sm tracking-widest uppercase py-3 transition-colors"
-              >
-                Subscribe
-              </button>
-            </form>
+            {subState === "success" ? (
+              <div className="flex items-center gap-3 bg-green-900/30 border border-green-500/30 rounded-lg px-4 py-4">
+                <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                <div>
+                  <p className="text-green-400 font-bold text-sm">You're subscribed!</p>
+                  <p className="text-green-400/70 text-xs mt-0.5">We'll keep you updated on new arrivals and offers.</p>
+                </div>
+              </div>
+            ) : subState === "already" ? (
+              <div className="flex items-center gap-3 bg-blue-900/30 border border-blue-500/30 rounded-lg px-4 py-4">
+                <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
+                <p className="text-blue-400 text-sm">You're already subscribed — thank you!</p>
+              </div>
+            ) : (
+              <form className="flex flex-col space-y-3" onSubmit={handleSubscribe}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setSubState("idle"); }}
+                  placeholder="Your email address"
+                  required
+                  className="bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary transition-colors rounded-sm"
+                />
+                {subState === "error" && (
+                  <p className="text-red-400 text-xs">Something went wrong. Please try again.</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={subState === "loading"}
+                  className="bg-primary hover:bg-primary/90 disabled:opacity-60 text-white font-bold text-sm tracking-widest uppercase py-3 transition-colors flex items-center justify-center gap-2 rounded-sm"
+                >
+                  {subState === "loading" ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Subscribing...</>
+                  ) : "Subscribe"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
