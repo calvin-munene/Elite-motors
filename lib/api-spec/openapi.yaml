@@ -3,20 +3,44 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Premium Car Dealership API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: cars
+    description: Car inventory management
+  - name: categories
+    description: Car categories
+  - name: inquiries
+    description: Customer inquiries and leads
+  - name: bookings
+    description: Test drive bookings
+  - name: testimonials
+    description: Customer testimonials
+  - name: blog
+    description: Blog posts and news
+  - name: team
+    description: Team members
+  - name: services
+    description: Dealership services
+  - name: settings
+    description: Site settings and content
+  - name: admin
+    description: Admin authentication and dashboard
+  - name: trade-ins
+    description: Trade-in submissions
+  - name: financing
+    description: Financing inquiries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +48,926 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── CARS ───────────────────────────────────────────────────────────────────
+  /cars:
+    get:
+      operationId: listCars
+      tags: [cars]
+      summary: List cars with filters
+      parameters:
+        - name: make
+          in: query
+          schema: { type: string }
+        - name: model
+          in: query
+          schema: { type: string }
+        - name: yearMin
+          in: query
+          schema: { type: integer }
+        - name: yearMax
+          in: query
+          schema: { type: integer }
+        - name: priceMin
+          in: query
+          schema: { type: number }
+        - name: priceMax
+          in: query
+          schema: { type: number }
+        - name: bodyType
+          in: query
+          schema: { type: string }
+        - name: fuelType
+          in: query
+          schema: { type: string }
+        - name: transmission
+          in: query
+          schema: { type: string }
+        - name: condition
+          in: query
+          schema: { type: string }
+        - name: color
+          in: query
+          schema: { type: string }
+        - name: availability
+          in: query
+          schema: { type: string }
+        - name: featured
+          in: query
+          schema: { type: boolean }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [newest, oldest, price_asc, price_desc, mileage_asc, featured]
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of cars
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cars:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Car"
+                  total:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+                required: [cars, total, offset, limit]
+    post:
+      operationId: createCar
+      tags: [cars]
+      summary: Create a new car listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCarBody"
+      responses:
+        "201":
+          description: Created car
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+
+  /cars/featured:
+    get:
+      operationId: getFeaturedCars
+      tags: [cars]
+      summary: Get featured cars for homepage
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 6 }
+      responses:
+        "200":
+          description: Featured cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+
+  /cars/stats:
+    get:
+      operationId: getCarStats
+      tags: [cars]
+      summary: Get inventory stats for dashboard
+      responses:
+        "200":
+          description: Car statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CarStats"
+
+  /cars/makes:
+    get:
+      operationId: getCarMakes
+      tags: [cars]
+      summary: Get unique makes in inventory
+      responses:
+        "200":
+          description: List of makes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /cars/{id}:
+    get:
+      operationId: getCar
+      tags: [cars]
+      summary: Get a single car by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Car detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+        "404":
+          description: Not found
+    put:
+      operationId: updateCar
+      tags: [cars]
+      summary: Update a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCarBody"
+      responses:
+        "200":
+          description: Updated car
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+    delete:
+      operationId: deleteCar
+      tags: [cars]
+      summary: Delete a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /cars/{id}/slug:
+    get:
+      operationId: getCarBySlug
+      tags: [cars]
+      summary: Get car by slug
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Car detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+
+  /cars/{id}/related:
+    get:
+      operationId: getRelatedCars
+      tags: [cars]
+      summary: Get related cars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 4 }
+      responses:
+        "200":
+          description: Related cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+
+  # ─── INQUIRIES ─────────────────────────────────────────────────────────────
+  /inquiries:
+    get:
+      operationId: listInquiries
+      tags: [inquiries]
+      summary: List all inquiries
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Inquiries list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inquiries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Inquiry"
+                  total:
+                    type: integer
+                required: [inquiries, total]
+    post:
+      operationId: createInquiry
+      tags: [inquiries]
+      summary: Submit a customer inquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInquiryBody"
+      responses:
+        "201":
+          description: Created inquiry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inquiry"
+
+  /inquiries/{id}:
+    get:
+      operationId: getInquiry
+      tags: [inquiries]
+      summary: Get a single inquiry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Inquiry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inquiry"
+    put:
+      operationId: updateInquiry
+      tags: [inquiries]
+      summary: Update inquiry status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                notes:
+                  type: string
+              required: [status]
+      responses:
+        "200":
+          description: Updated inquiry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inquiry"
+
+  # ─── BOOKINGS ──────────────────────────────────────────────────────────────
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List all test drive bookings
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Bookings list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Booking"
+                  total:
+                    type: integer
+                required: [bookings, total]
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Book a test drive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingBody"
+      responses:
+        "201":
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    put:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                notes:
+                  type: string
+              required: [status]
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # ─── TESTIMONIALS ──────────────────────────────────────────────────────────
+  /testimonials:
+    get:
+      operationId: listTestimonials
+      tags: [testimonials]
+      summary: List testimonials
+      parameters:
+        - name: published
+          in: query
+          schema: { type: boolean }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: Testimonials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Testimonial"
+    post:
+      operationId: createTestimonial
+      tags: [testimonials]
+      summary: Create a testimonial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTestimonialBody"
+      responses:
+        "201":
+          description: Created testimonial
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Testimonial"
+
+  /testimonials/{id}:
+    put:
+      operationId: updateTestimonial
+      tags: [testimonials]
+      summary: Update a testimonial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTestimonialBody"
+      responses:
+        "200":
+          description: Updated testimonial
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Testimonial"
+    delete:
+      operationId: deleteTestimonial
+      tags: [testimonials]
+      summary: Delete a testimonial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── BLOG ─────────────────────────────────────────────────────────────────
+  /blog:
+    get:
+      operationId: listBlogPosts
+      tags: [blog]
+      summary: List blog posts
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: published
+          in: query
+          schema: { type: boolean }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Blog posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BlogPost"
+                  total:
+                    type: integer
+                required: [posts, total]
+    post:
+      operationId: createBlogPost
+      tags: [blog]
+      summary: Create a blog post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBlogPostBody"
+      responses:
+        "201":
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+
+  /blog/{id}:
+    get:
+      operationId: getBlogPost
+      tags: [blog]
+      summary: Get a blog post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Blog post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+    put:
+      operationId: updateBlogPost
+      tags: [blog]
+      summary: Update a blog post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBlogPostBody"
+      responses:
+        "200":
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+    delete:
+      operationId: deleteBlogPost
+      tags: [blog]
+      summary: Delete a blog post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── TEAM ─────────────────────────────────────────────────────────────────
+  /team:
+    get:
+      operationId: listTeamMembers
+      tags: [team]
+      summary: List team members
+      responses:
+        "200":
+          description: Team members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamMember"
+    post:
+      operationId: createTeamMember
+      tags: [team]
+      summary: Create a team member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeamMemberBody"
+      responses:
+        "201":
+          description: Created team member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMember"
+
+  /team/{id}:
+    put:
+      operationId: updateTeamMember
+      tags: [team]
+      summary: Update a team member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeamMemberBody"
+      responses:
+        "200":
+          description: Updated team member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMember"
+    delete:
+      operationId: deleteTeamMember
+      tags: [team]
+      summary: Delete a team member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── SERVICES ─────────────────────────────────────────────────────────────
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List dealership services
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+    post:
+      operationId: createService
+      tags: [services]
+      summary: Create a service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceBody"
+      responses:
+        "201":
+          description: Created service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+  /services/{id}:
+    put:
+      operationId: updateService
+      tags: [services]
+      summary: Update a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceBody"
+      responses:
+        "200":
+          description: Updated service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+    delete:
+      operationId: deleteService
+      tags: [services]
+      summary: Delete a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── SETTINGS ─────────────────────────────────────────────────────────────
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get site settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteSettings"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update site settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteSettings"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteSettings"
+
+  # ─── ADMIN ─────────────────────────────────────────────────────────────────
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required: [username, password]
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  admin:
+                    $ref: "#/components/schemas/AdminUser"
+                required: [token, admin]
+        "401":
+          description: Unauthorized
+
+  /admin/me:
+    get:
+      operationId: getAdminMe
+      tags: [admin]
+      summary: Get current admin user
+      responses:
+        "200":
+          description: Current admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          description: Unauthorized
+
+  /admin/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [admin]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # ─── TRADE-INS ────────────────────────────────────────────────────────────
+  /trade-ins:
+    get:
+      operationId: listTradeIns
+      tags: [trade-ins]
+      summary: List trade-in submissions
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Trade-ins
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tradeIns:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TradeIn"
+                  total:
+                    type: integer
+                required: [tradeIns, total]
+    post:
+      operationId: createTradeIn
+      tags: [trade-ins]
+      summary: Submit a trade-in request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTradeInBody"
+      responses:
+        "201":
+          description: Created trade-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeIn"
+
+  # ─── FINANCING ────────────────────────────────────────────────────────────
+  /financing:
+    get:
+      operationId: listFinancingInquiries
+      tags: [financing]
+      summary: List financing inquiries
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Financing inquiries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inquiries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FinancingInquiry"
+                  total:
+                    type: integer
+                required: [inquiries, total]
+    post:
+      operationId: createFinancingInquiry
+      tags: [financing]
+      summary: Submit a financing inquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFinancingInquiryBody"
+      responses:
+        "201":
+          description: Created financing inquiry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancingInquiry"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +975,827 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    Car:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        title:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        trim:
+          type: string
+          nullable: true
+        year:
+          type: integer
+        price:
+          type: number
+        discountedPrice:
+          type: number
+          nullable: true
+        mileage:
+          type: integer
+        engineSize:
+          type: string
+          nullable: true
+        transmission:
+          type: string
+        fuelType:
+          type: string
+        drivetrain:
+          type: string
+          nullable: true
+        bodyType:
+          type: string
+        seats:
+          type: integer
+          nullable: true
+        doors:
+          type: integer
+          nullable: true
+        color:
+          type: string
+        stockNumber:
+          type: string
+          nullable: true
+        vin:
+          type: string
+          nullable: true
+        condition:
+          type: string
+        availability:
+          type: string
+        shortDescription:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        features:
+          type: array
+          items:
+            type: string
+          nullable: true
+        safetyFeatures:
+          type: array
+          items:
+            type: string
+          nullable: true
+        comfortFeatures:
+          type: array
+          items:
+            type: string
+          nullable: true
+        techFeatures:
+          type: array
+          items:
+            type: string
+          nullable: true
+        gallery:
+          type: array
+          items:
+            type: string
+          nullable: true
+        videoUrl:
+          type: string
+          nullable: true
+        isFeatured:
+          type: boolean
+        isPublished:
+          type: boolean
+        financingAvailable:
+          type: boolean
+        location:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - slug
+        - title
+        - make
+        - model
+        - year
+        - price
+        - mileage
+        - transmission
+        - fuelType
+        - bodyType
+        - color
+        - condition
+        - availability
+        - isFeatured
+        - isPublished
+        - financingAvailable
+        - createdAt
+        - updatedAt
+
+    CreateCarBody:
+      type: object
+      properties:
+        title:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        trim:
+          type: string
+          nullable: true
+        year:
+          type: integer
+        price:
+          type: number
+        discountedPrice:
+          type: number
+          nullable: true
+        mileage:
+          type: integer
+        engineSize:
+          type: string
+          nullable: true
+        transmission:
+          type: string
+        fuelType:
+          type: string
+        drivetrain:
+          type: string
+          nullable: true
+        bodyType:
+          type: string
+        seats:
+          type: integer
+          nullable: true
+        doors:
+          type: integer
+          nullable: true
+        color:
+          type: string
+        stockNumber:
+          type: string
+          nullable: true
+        vin:
+          type: string
+          nullable: true
+        condition:
+          type: string
+        availability:
+          type: string
+        shortDescription:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        features:
+          type: array
+          items:
+            type: string
+          nullable: true
+        safetyFeatures:
+          type: array
+          items:
+            type: string
+          nullable: true
+        comfortFeatures:
+          type: array
+          items:
+            type: string
+          nullable: true
+        techFeatures:
+          type: array
+          items:
+            type: string
+          nullable: true
+        gallery:
+          type: array
+          items:
+            type: string
+          nullable: true
+        videoUrl:
+          type: string
+          nullable: true
+        isFeatured:
+          type: boolean
+        isPublished:
+          type: boolean
+        financingAvailable:
+          type: boolean
+        location:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+      required:
+        - title
+        - make
+        - model
+        - year
+        - price
+        - mileage
+        - transmission
+        - fuelType
+        - bodyType
+        - color
+        - condition
+        - availability
+
+    CarStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        available:
+          type: integer
+        sold:
+          type: integer
+        reserved:
+          type: integer
+        featured:
+          type: integer
+        avgPrice:
+          type: number
+      required: [total, available, sold, reserved, featured, avgPrice]
+
+    Inquiry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        carId:
+          type: integer
+          nullable: true
+        carTitle:
+          type: string
+          nullable: true
+        message:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, name, phone, message, type, status, createdAt]
+
+    CreateInquiryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        carId:
+          type: integer
+          nullable: true
+        carTitle:
+          type: string
+          nullable: true
+        message:
+          type: string
+        type:
+          type: string
+      required: [name, phone, message, type]
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        carId:
+          type: integer
+          nullable: true
+        carTitle:
+          type: string
+          nullable: true
+        preferredDate:
+          type: string
+        preferredTime:
+          type: string
+        location:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, name, phone, preferredDate, preferredTime, status, createdAt]
+
+    CreateBookingBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        carId:
+          type: integer
+          nullable: true
+        carTitle:
+          type: string
+          nullable: true
+        preferredDate:
+          type: string
+        preferredTime:
+          type: string
+        location:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+      required: [name, phone, preferredDate, preferredTime]
+
+    Testimonial:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        location:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+        review:
+          type: string
+        carPurchased:
+          type: string
+          nullable: true
+        isPublished:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, name, rating, review, isPublished, createdAt]
+
+    CreateTestimonialBody:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+        review:
+          type: string
+        carPurchased:
+          type: string
+          nullable: true
+        isPublished:
+          type: boolean
+      required: [name, rating, review, isPublished]
+
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        title:
+          type: string
+        excerpt:
+          type: string
+          nullable: true
+        content:
+          type: string
+        category:
+          type: string
+        coverImage:
+          type: string
+          nullable: true
+        isPublished:
+          type: boolean
+        publishedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, slug, title, content, category, isPublished, createdAt]
+
+    CreateBlogPostBody:
+      type: object
+      properties:
+        title:
+          type: string
+        excerpt:
+          type: string
+          nullable: true
+        content:
+          type: string
+        category:
+          type: string
+        coverImage:
+          type: string
+          nullable: true
+        isPublished:
+          type: boolean
+      required: [title, content, category, isPublished]
+
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        title:
+          type: string
+        photo:
+          type: string
+          nullable: true
+        specialty:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+      required: [id, name, title, sortOrder]
+
+    CreateTeamMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        photo:
+          type: string
+          nullable: true
+        specialty:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+      required: [name, title, sortOrder]
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+      required: [id, title, description, isActive, sortOrder]
+
+    CreateServiceBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+      required: [title, description, isActive, sortOrder]
+
+    SiteSettings:
+      type: object
+      properties:
+        dealerName:
+          type: string
+        tagline:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        googleMapsUrl:
+          type: string
+          nullable: true
+        facebookUrl:
+          type: string
+          nullable: true
+        instagramUrl:
+          type: string
+          nullable: true
+        twitterUrl:
+          type: string
+          nullable: true
+        youtubeUrl:
+          type: string
+          nullable: true
+        openingHours:
+          type: string
+          nullable: true
+        heroTitle:
+          type: string
+          nullable: true
+        heroSubtitle:
+          type: string
+          nullable: true
+        aboutTitle:
+          type: string
+          nullable: true
+        aboutContent:
+          type: string
+          nullable: true
+        aboutImage:
+          type: string
+          nullable: true
+        yearsInBusiness:
+          type: integer
+          nullable: true
+        carsInStock:
+          type: integer
+          nullable: true
+        satisfiedClients:
+          type: integer
+          nullable: true
+      required: [dealerName]
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        name:
+          type: string
+          nullable: true
+      required: [id, username]
+
+    DashboardStats:
+      type: object
+      properties:
+        totalCars:
+          type: integer
+        availableCars:
+          type: integer
+        soldCars:
+          type: integer
+        totalInquiries:
+          type: integer
+        newInquiries:
+          type: integer
+        totalBookings:
+          type: integer
+        pendingBookings:
+          type: integer
+        totalTradeIns:
+          type: integer
+        recentInquiries:
+          type: array
+          items:
+            $ref: "#/components/schemas/Inquiry"
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+      required:
+        - totalCars
+        - availableCars
+        - soldCars
+        - totalInquiries
+        - newInquiries
+        - totalBookings
+        - pendingBookings
+        - totalTradeIns
+        - recentInquiries
+        - recentBookings
+
+    TradeIn:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        make:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        mileage:
+          type: integer
+        condition:
+          type: string
+        askingPrice:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photos:
+          type: array
+          items:
+            type: string
+          nullable: true
+        status:
+          type: string
+        createdAt:
+          type: string
+      required: [id, ownerName, phone, make, model, year, mileage, condition, status, createdAt]
+
+    CreateTradeInBody:
+      type: object
+      properties:
+        ownerName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        make:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        mileage:
+          type: integer
+        condition:
+          type: string
+        askingPrice:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photos:
+          type: array
+          items:
+            type: string
+          nullable: true
+      required: [ownerName, phone, make, model, year, mileage, condition]
+
+    FinancingInquiry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        carId:
+          type: integer
+          nullable: true
+        carTitle:
+          type: string
+          nullable: true
+        loanAmount:
+          type: number
+          nullable: true
+        downPayment:
+          type: number
+          nullable: true
+        loanTermMonths:
+          type: integer
+          nullable: true
+        employmentStatus:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, phone, status, createdAt]
+
+    CreateFinancingInquiryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        carId:
+          type: integer
+          nullable: true
+        carTitle:
+          type: string
+          nullable: true
+        loanAmount:
+          type: number
+          nullable: true
+        downPayment:
+          type: number
+          nullable: true
+        loanTermMonths:
+          type: integer
+          nullable: true
+        employmentStatus:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+      required: [name, phone]

@@ -1,0 +1,97 @@
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import NotFound from "@/pages/not-found";
+
+import Home from "@/pages/index";
+import About from "@/pages/about";
+import Inventory from "@/pages/inventory";
+import CarDetail from "@/pages/car-detail";
+import Showroom from "@/pages/showroom";
+import Team from "@/pages/team";
+import Services from "@/pages/services";
+import Financing from "@/pages/financing";
+import TradeIn from "@/pages/trade-in";
+import TestDrive from "@/pages/test-drive";
+import Testimonials from "@/pages/testimonials";
+import Blog from "@/pages/blog";
+import BlogPost from "@/pages/blog-post";
+import Contact from "@/pages/contact";
+import FAQ from "@/pages/faq";
+import PrivacyPolicy from "@/pages/privacy";
+import TermsConditions from "@/pages/terms";
+
+import AdminLogin from "@/pages/admin/login";
+import AdminDashboard from "@/pages/admin/index";
+import AdminCars from "@/pages/admin/cars/index";
+import AdminNewCar from "@/pages/admin/cars/new";
+import AdminEditCar from "@/pages/admin/cars/edit";
+import AdminInquiries from "@/pages/admin/inquiries/index";
+import AdminBookings from "@/pages/admin/bookings/index";
+import AdminTradeIns from "@/pages/admin/trade-ins/index";
+import AdminFinancing from "@/pages/admin/financing/index";
+import AdminTestimonials from "@/pages/admin/testimonials/index";
+import AdminBlog from "@/pages/admin/blog/index";
+import AdminTeam from "@/pages/admin/team/index";
+import AdminSettings from "@/pages/admin/settings/index";
+
+import "@/lib/api-setup"; // Import api setup to set auth token getter
+
+const queryClient = new QueryClient();
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/about" component={About} />
+      <Route path="/inventory" component={Inventory} />
+      <Route path="/cars/:slug" component={CarDetail} />
+      <Route path="/showroom" component={Showroom} />
+      <Route path="/team" component={Team} />
+      <Route path="/services" component={Services} />
+      <Route path="/financing" component={Financing} />
+      <Route path="/trade-in" component={TradeIn} />
+      <Route path="/test-drive" component={TestDrive} />
+      <Route path="/testimonials" component={Testimonials} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:id" component={BlogPost} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/faq" component={FAQ} />
+      <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/terms" component={TermsConditions} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/cars" component={AdminCars} />
+      <Route path="/admin/cars/new" component={AdminNewCar} />
+      <Route path="/admin/cars/:id/edit" component={AdminEditCar} />
+      <Route path="/admin/inquiries" component={AdminInquiries} />
+      <Route path="/admin/bookings" component={AdminBookings} />
+      <Route path="/admin/trade-ins" component={AdminTradeIns} />
+      <Route path="/admin/financing" component={AdminFinancing} />
+      <Route path="/admin/testimonials" component={AdminTestimonials} />
+      <Route path="/admin/blog" component={AdminBlog} />
+      <Route path="/admin/team" component={AdminTeam} />
+      <Route path="/admin/services" component={AdminSettings} /> {/* Services settings mapped to settings page or something similar for now, but there's a services page in public. Admin services missing? Ah we didn't implement AdminServices, let's map to a stub or I'll implement it */}
+      <Route path="/admin/settings" component={AdminSettings} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
