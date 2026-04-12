@@ -44,6 +44,7 @@ export const siteSettingsTable = pgTable("site_settings", {
   faviconUrl: text("favicon_url"),
   primaryColor: text("primary_color").default("#DC2626"),
   categoryImages: text("category_images"),
+  chatbotEnabled: text("chatbot_enabled").default("true"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

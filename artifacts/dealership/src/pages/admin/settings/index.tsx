@@ -40,6 +40,7 @@ const formSchema = z.object({
   logoUrl: z.string().optional(),
   primaryColor: z.string().optional(),
   whatsappApiEnabled: z.boolean().optional(),
+  chatbotEnabled: z.boolean().optional(),
   yearsInBusiness: z.coerce.number().optional(),
   carsInStock: z.coerce.number().optional(),
   satisfiedClients: z.coerce.number().optional(),
@@ -130,6 +131,7 @@ export default function AdminSettings() {
       usdToKesRate: 130,
       footerTagline: "", metaDescription: "", logoUrl: "", primaryColor: "#DC2626",
       whatsappApiEnabled: false,
+      chatbotEnabled: true,
       yearsInBusiness: 0, carsInStock: 0, satisfiedClients: 0,
       catSuv: "", catLuxury: "", catSports: "", catSedan: "",
     },
@@ -168,6 +170,7 @@ export default function AdminSettings() {
         logoUrl: (settings as any).logoUrl || "",
         primaryColor: (settings as any).primaryColor || "#DC2626",
         whatsappApiEnabled: (settings as any).whatsappApiEnabled === true || (settings as any).whatsappApiEnabled === "true",
+        chatbotEnabled: (settings as any).chatbotEnabled !== "false",
         yearsInBusiness: settings.yearsInBusiness || 0,
         carsInStock: settings.carsInStock || 0,
         satisfiedClients: settings.satisfiedClients || 0,
@@ -180,14 +183,14 @@ export default function AdminSettings() {
   }, [settings, form]);
 
   const onSubmit = (values: FormValues) => {
-    const { catSuv, catLuxury, catSports, catSedan, ...rest } = values;
+    const { catSuv, catLuxury, catSports, catSedan, chatbotEnabled, ...rest } = values;
     const categoryImages = JSON.stringify({
       SUV: catSuv || "",
       Luxury: catLuxury || "",
       Sports: catSports || "",
       Sedan: catSedan || "",
     });
-    updateSettings.mutate({ data: { ...rest, categoryImages } as any }, {
+    updateSettings.mutate({ data: { ...rest, categoryImages, chatbotEnabled: chatbotEnabled ? "true" : "false" } as any }, {
       onSuccess: () => toast({ title: "Settings saved successfully" }),
       onError: () => toast({ title: "Error saving settings", variant: "destructive" }),
     });
@@ -367,6 +370,28 @@ export default function AdminSettings() {
             {activeTab === "integrations" && (
               <div className="space-y-8">
                 <div>
+                  <SectionHeader icon={Bot} title="AI Chatbot" desc="Control the AutoElite AI assistant shown to customers" />
+                  <div className="space-y-4">
+                    <FormField control={form.control} name="chatbotEnabled" render={({ field }) => (
+                      <FormItem className="flex items-center justify-between bg-background rounded-lg p-4 border border-white/10">
+                        <div>
+                          <FormLabel className="text-sm font-bold text-white">Enable AI Chatbot (AutoElite AI)</FormLabel>
+                          <p className="text-xs text-gray-500 mt-1">
+                            When enabled: answers from local knowledge first, then falls back to OpenAI.<br />
+                            When disabled: only uses learned local knowledge — falls back to WhatsApp/email support if it doesn't know.
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )} />
+                    <div className="bg-blue-900/20 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-200/70">
+                      <strong className="text-blue-300">How the AI learns:</strong> Every time a customer asks a question and OpenAI answers it, that answer is saved to your local knowledge base. Next time someone asks something similar, the chatbot answers instantly from local knowledge — no OpenAI call needed. You can view and manage the knowledge base in the <strong className="text-blue-300">AI Knowledge Base</strong> section of the admin menu.
+                    </div>
+                  </div>
+                </div>
+                <div>
                   <SectionHeader icon={Bot} title="WhatsApp Integration" />
                   <div className="space-y-4">
                     <FormField control={form.control} name="whatsappApiEnabled" render={({ field }) => (
@@ -376,7 +401,7 @@ export default function AdminSettings() {
                           <p className="text-xs text-gray-500 mt-1">Enable WhatsApp Business API for automated messages</p>
                         </div>
                         <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )} />
