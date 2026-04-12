@@ -2,11 +2,64 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bot, X, Send, Minimize2, Maximize2, Loader2 } from "lucide-react";
-import { useCreateOpenaiConversation, useGetOpenaiConversation } from "@workspace/api-client-react";
+import { useCreateOpenaiConversation } from "@workspace/api-client-react";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+function renderMarkdown(text: string) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let key = 0;
+
+  const parseInline = (str: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    const regex = /\*\*(.*?)\*\*|\*(.*?)\*/g;
+    let last = 0;
+    let match;
+    while ((match = regex.exec(str)) !== null) {
+      if (match.index > last) parts.push(str.slice(last, match.index));
+      if (match[1] !== undefined) parts.push(<strong key={match.index} className="text-white font-semibold">{match[1]}</strong>);
+      else if (match[2] !== undefined) parts.push(<em key={match.index} className="italic text-gray-200">{match[2]}</em>);
+      last = regex.lastIndex;
+    }
+    if (last < str.length) parts.push(str.slice(last));
+    return parts;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) {
+      elements.push(<div key={key++} className="h-2" />);
+      continue;
+    }
+    if (line.startsWith("### ")) {
+      elements.push(<p key={key++} className="font-bold text-white text-sm mt-1 mb-0.5">{parseInline(line.slice(4))}</p>);
+    } else if (line.startsWith("## ")) {
+      elements.push(<p key={key++} className="font-bold text-white mt-1 mb-0.5">{parseInline(line.slice(3))}</p>);
+    } else if (line.match(/^[-•*]\s/)) {
+      elements.push(
+        <div key={key++} className="flex gap-2 items-start">
+          <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+          <span>{parseInline(line.slice(2))}</span>
+        </div>
+      );
+    } else if (line.match(/^\d+\.\s/)) {
+      const num = line.match(/^(\d+)\.\s/)![1];
+      elements.push(
+        <div key={key++} className="flex gap-2 items-start">
+          <span className="text-primary font-bold flex-shrink-0 min-w-[16px]">{num}.</span>
+          <span>{parseInline(line.replace(/^\d+\.\s/, ""))}</span>
+        </div>
+      );
+    } else {
+      elements.push(<p key={key++} className="leading-relaxed">{parseInline(line)}</p>);
+    }
+  }
+  return <div className="space-y-0.5 text-sm text-gray-200">{elements}</div>;
 }
 
 export function AIChatbot() {
@@ -46,7 +99,7 @@ export function AIChatbot() {
     if (messages.length === 0) {
       setMessages([{
         role: "assistant",
-        content: "Habari! I'm AutoElite AI, your personal car expert. I can help you with:\n\n• Choosing the right car for your budget and needs\n• Understanding import duties and KRA calculations\n• Japanese import advice and auction grades\n• Financing options in Kenya\n• Any car-related question!\n\nWhat can I help you with today?"
+        content: "Habari! I'm **AutoElite AI**, your personal car expert. I can help you with:\n\n• Choosing the right car for your budget\n• Understanding KRA import duties\n• Japanese import advice & auction grades\n• Financing options in Kenya\n• Any car-related question!\n\nWhat can I help you with today?"
       }]);
     }
     setTimeout(() => inputRef.current?.focus(), 100);
@@ -104,7 +157,7 @@ export function AIChatbot() {
           }
         }
       }
-    } catch (error) {
+    } catch {
       setMessages(prev => {
         const updated = [...prev];
         updated[updated.length - 1] = {
@@ -131,7 +184,7 @@ export function AIChatbot() {
       {isOpen && (
         <div
           className={`fixed z-50 bottom-28 right-6 bg-[#0f0f0f] border border-white/10 rounded-2xl shadow-2xl shadow-black/50 transition-all duration-300 ${
-            isMinimized ? "w-72 h-14" : "w-[380px] h-[550px]"
+            isMinimized ? "w-72 h-14" : "w-[380px] h-[560px]"
           }`}
           style={{ maxHeight: "calc(100vh - 120px)" }}
         >
@@ -162,7 +215,7 @@ export function AIChatbot() {
           {!isMinimized && (
             <>
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ height: "calc(100% - 120px)" }}>
+              <div className="overflow-y-auto p-4 space-y-4" style={{ height: "calc(100% - 130px)" }}>
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     {msg.role === "assistant" && (
@@ -171,19 +224,22 @@ export function AIChatbot() {
                       </div>
                     )}
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                      className={`max-w-[82%] rounded-2xl px-4 py-3 ${
                         msg.role === "user"
-                          ? "bg-primary text-white rounded-tr-sm"
-                          : "bg-white/5 border border-white/8 text-gray-200 rounded-tl-sm"
+                          ? "bg-primary text-white rounded-tr-sm text-sm leading-relaxed"
+                          : "bg-white/5 border border-white/8 rounded-tl-sm"
                       }`}
                     >
-                      {msg.content}
-                      {msg.role === "assistant" && msg.content === "" && (
-                        <span className="inline-flex gap-1">
+                      {msg.role === "user" ? (
+                        msg.content
+                      ) : msg.content === "" ? (
+                        <span className="inline-flex gap-1 items-center py-1">
                           <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
                           <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
                           <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
                         </span>
+                      ) : (
+                        renderMarkdown(msg.content)
                       )}
                     </div>
                   </div>
@@ -194,7 +250,7 @@ export function AIChatbot() {
               {/* Quick Prompts */}
               {messages.length === 1 && (
                 <div className="px-4 pb-2 flex flex-wrap gap-2">
-                  {["Best car under KES 2M", "JDM auction grades explained", "How to calculate import duty"].map(prompt => (
+                  {["Best car under KES 2M", "JDM auction grades", "Calculate import duty"].map(prompt => (
                     <button
                       key={prompt}
                       onClick={() => { setInputValue(prompt); inputRef.current?.focus(); }}
@@ -226,7 +282,7 @@ export function AIChatbot() {
                     {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </Button>
                 </div>
-                <p className="text-gray-600 text-xs text-center mt-2">AutoElite AI — Powered by advanced automotive knowledge</p>
+                <p className="text-gray-600 text-xs text-center mt-2">AutoElite AI — Kenya's automotive expert</p>
               </div>
             </>
           )}
@@ -236,7 +292,7 @@ export function AIChatbot() {
       {/* Toggle Button */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : openChat}
-        className="fixed bottom-6 right-24 z-50 w-14 h-14 bg-gradient-to-br from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 rounded-full shadow-lg shadow-red-900/40 flex items-center justify-center transition-all duration-300 hover:scale-110 group"
+        className="fixed bottom-6 right-24 z-50 w-14 h-14 bg-gradient-to-br from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 rounded-full shadow-lg shadow-red-900/40 flex items-center justify-center transition-all duration-300 hover:scale-110"
         title="Chat with AutoElite AI"
       >
         {isOpen ? (

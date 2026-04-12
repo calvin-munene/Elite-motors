@@ -1,14 +1,16 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import { useEffect } from "react";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CompareProvider } from "@/contexts/CompareContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { useGetSettings } from "@workspace/api-client-react";
+import { AIChatbot } from "@/components/AIChatbot";
 
 import Home from "@/pages/index";
 import About from "@/pages/about";
@@ -49,6 +51,14 @@ import "@/lib/api-setup";
 
 const queryClient = new QueryClient();
 
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [location]);
+  return null;
+}
+
 function AppContexts({ children }: { children: React.ReactNode }) {
   const { data: settings } = useGetSettings();
   const kesRate = settings?.usdToKesRate ?? 130;
@@ -66,45 +76,52 @@ function AppContexts({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/about" component={About} />
-      <Route path="/inventory" component={Inventory} />
-      <Route path="/cars/:slug" component={CarDetail} />
-      <Route path="/showroom" component={Showroom} />
-      <Route path="/team" component={Team} />
-      <Route path="/services" component={Services} />
-      <Route path="/financing" component={Financing} />
-      <Route path="/trade-in" component={TradeIn} />
-      <Route path="/test-drive" component={TestDrive} />
-      <Route path="/testimonials" component={Testimonials} />
-      <Route path="/blog" component={Blog} />
-      <Route path="/blog/:id" component={BlogPost} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/faq" component={FAQ} />
-      <Route path="/privacy" component={PrivacyPolicy} />
-      <Route path="/terms" component={TermsConditions} />
-      <Route path="/compare" component={Compare} />
-      <Route path="/wishlist" component={Wishlist} />
-      <Route path="/kra-calculator" component={KRACalculator} />
+  const [location] = useLocation();
+  const isAdmin = location.startsWith("/admin");
 
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/cars" component={AdminCars} />
-      <Route path="/admin/cars/new" component={AdminNewCar} />
-      <Route path="/admin/cars/:id/edit" component={AdminEditCar} />
-      <Route path="/admin/inquiries" component={AdminInquiries} />
-      <Route path="/admin/bookings" component={AdminBookings} />
-      <Route path="/admin/trade-ins" component={AdminTradeIns} />
-      <Route path="/admin/financing" component={AdminFinancing} />
-      <Route path="/admin/testimonials" component={AdminTestimonials} />
-      <Route path="/admin/blog" component={AdminBlog} />
-      <Route path="/admin/team" component={AdminTeam} />
-      <Route path="/admin/services" component={AdminSettings} />
-      <Route path="/admin/settings" component={AdminSettings} />
-      <Route component={NotFound} />
-    </Switch>
+  return (
+    <>
+      <ScrollToTop />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/about" component={About} />
+        <Route path="/inventory" component={Inventory} />
+        <Route path="/cars/:slug" component={CarDetail} />
+        <Route path="/showroom" component={Showroom} />
+        <Route path="/team" component={Team} />
+        <Route path="/services" component={Services} />
+        <Route path="/financing" component={Financing} />
+        <Route path="/trade-in" component={TradeIn} />
+        <Route path="/test-drive" component={TestDrive} />
+        <Route path="/testimonials" component={Testimonials} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:id" component={BlogPost} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/faq" component={FAQ} />
+        <Route path="/privacy" component={PrivacyPolicy} />
+        <Route path="/terms" component={TermsConditions} />
+        <Route path="/compare" component={Compare} />
+        <Route path="/wishlist" component={Wishlist} />
+        <Route path="/kra-calculator" component={KRACalculator} />
+
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/cars" component={AdminCars} />
+        <Route path="/admin/cars/new" component={AdminNewCar} />
+        <Route path="/admin/cars/:id/edit" component={AdminEditCar} />
+        <Route path="/admin/inquiries" component={AdminInquiries} />
+        <Route path="/admin/bookings" component={AdminBookings} />
+        <Route path="/admin/trade-ins" component={AdminTradeIns} />
+        <Route path="/admin/financing" component={AdminFinancing} />
+        <Route path="/admin/testimonials" component={AdminTestimonials} />
+        <Route path="/admin/blog" component={AdminBlog} />
+        <Route path="/admin/team" component={AdminTeam} />
+        <Route path="/admin/services" component={AdminSettings} />
+        <Route path="/admin/settings" component={AdminSettings} />
+        <Route component={NotFound} />
+      </Switch>
+      {!isAdmin && <AIChatbot />}
+    </>
   );
 }
 

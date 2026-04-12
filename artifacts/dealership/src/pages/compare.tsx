@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
-import { AIChatbot } from "@/components/AIChatbot";
 import { useCompare } from "@/contexts/CompareContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -157,7 +156,6 @@ export default function Compare() {
 
       <Footer />
       <FloatingWhatsApp />
-      <AIChatbot />
     </div>
   );
 }

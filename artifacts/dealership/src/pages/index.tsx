@@ -18,11 +18,25 @@ export default function Home() {
   const { data: blogData } = useListBlogPosts({ limit: 3, published: true });
   const { data: settings } = useGetSettings();
 
+  const defaultCategoryImages = {
+    SUV: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=600",
+    Luxury: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=600",
+    Sports: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=600",
+    Sedan: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=600",
+  };
+
+  let settingsCategoryImages: Record<string, string> = {};
+  try {
+    if ((settings as any)?.categoryImages) {
+      settingsCategoryImages = JSON.parse((settings as any).categoryImages);
+    }
+  } catch {}
+
   const categories = [
-    { name: "SUV", image: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=600" },
-    { name: "Luxury", image: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=600" },
-    { name: "Sports", image: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=600" },
-    { name: "Sedan", image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=600" },
+    { name: "SUV", image: settingsCategoryImages["SUV"] || defaultCategoryImages.SUV },
+    { name: "Luxury", image: settingsCategoryImages["Luxury"] || defaultCategoryImages.Luxury },
+    { name: "Sports", image: settingsCategoryImages["Sports"] || defaultCategoryImages.Sports },
+    { name: "Sedan", image: settingsCategoryImages["Sedan"] || defaultCategoryImages.Sedan },
   ];
 
   return (

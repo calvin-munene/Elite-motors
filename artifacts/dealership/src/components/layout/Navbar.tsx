@@ -1,9 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { Menu, X, Phone, MapPin, Globe, DollarSign, Heart, Scale, ChevronDown } from "lucide-react";
+import { Menu, X, Phone, MapPin, Globe, Heart, Scale } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCompare } from "@/contexts/CompareContext";
 import { useGetSettings } from "@workspace/api-client-react";
@@ -13,7 +12,6 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [location] = useLocation();
   const { language, setLanguage, t } = useLanguage();
-  const { currency, setCurrency } = useCurrency();
   const { wishlist } = useWishlist();
   const { compareList } = useCompare();
   const { data: settings } = useGetSettings();
@@ -71,16 +69,6 @@ export function Navbar() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
-            {/* Currency Toggle */}
-            <button
-              onClick={() => setCurrency(currency === "KES" ? "USD" : "KES")}
-              className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-full transition-all"
-              title="Toggle currency"
-            >
-              <DollarSign className="w-3 h-3" />
-              {currency}
-            </button>
-
             {/* Language Toggle */}
             <button
               onClick={() => setLanguage(language === "en" ? "sw" : "en")}
@@ -161,10 +149,6 @@ export function Navbar() {
               </Link>
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setCurrency(currency === "KES" ? "USD" : "KES")}
-                className="flex items-center gap-2 text-sm bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white">
-                <DollarSign className="w-4 h-4" /> {currency}
-              </button>
               <button onClick={() => setLanguage(language === "en" ? "sw" : "en")}
                 className="flex items-center gap-2 text-sm bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white">
                 <Globe className="w-4 h-4" /> {language === "en" ? "English" : "Kiswahili"}

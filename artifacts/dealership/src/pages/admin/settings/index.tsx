@@ -7,11 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { Globe, DollarSign, MapPin, Phone, Palette, Bot, Image, MessageSquare } from "lucide-react";
+import { Globe, DollarSign, MapPin, Phone, Palette, Bot, Image, MessageSquare, LayoutGrid } from "lucide-react";
 
 const formSchema = z.object({
   dealerName: z.string().min(2),
@@ -35,7 +34,6 @@ const formSchema = z.object({
   aboutTitle: z.string().optional(),
   aboutContent: z.string().optional(),
   aboutImage: z.string().optional(),
-  currency: z.string().optional(),
   usdToKesRate: z.coerce.number().optional(),
   footerTagline: z.string().optional(),
   metaDescription: z.string().optional(),
@@ -45,6 +43,10 @@ const formSchema = z.object({
   yearsInBusiness: z.coerce.number().optional(),
   carsInStock: z.coerce.number().optional(),
   satisfiedClients: z.coerce.number().optional(),
+  catSuv: z.string().optional(),
+  catLuxury: z.string().optional(),
+  catSports: z.string().optional(),
+  catSedan: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -82,6 +84,34 @@ function Field({ control, name, label, placeholder, type = "text", span2 = false
   );
 }
 
+function CategoryImageField({ control, name, label }: { control: any; name: any; label: string }) {
+  return (
+    <FormField control={control} name={name} render={({ field }) => (
+      <FormItem>
+        <FormLabel className="text-xs uppercase tracking-wider text-gray-400 font-bold">{label} Image URL</FormLabel>
+        <div className="space-y-2">
+          {field.value && (
+            <div className="relative h-32 rounded-lg overflow-hidden border border-white/10">
+              <img src={field.value} alt={label} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="font-serif text-lg font-bold text-white uppercase tracking-widest">{label}</span>
+              </div>
+            </div>
+          )}
+          <FormControl>
+            <Input
+              className="bg-background border-white/10 text-white"
+              placeholder={`https://images.unsplash.com/photo-... (${label} car image)`}
+              {...field}
+            />
+          </FormControl>
+        </div>
+        <FormMessage />
+      </FormItem>
+    )} />
+  );
+}
+
 export default function AdminSettings() {
   const { data: settings, isLoading } = useGetSettings();
   const updateSettings = useUpdateSettings();
@@ -97,15 +127,19 @@ export default function AdminSettings() {
       facebookUrl: "", instagramUrl: "", twitterUrl: "", youtubeUrl: "",
       heroTitle: "", heroSubtitle: "", heroImage: "",
       aboutTitle: "", aboutContent: "", aboutImage: "",
-      currency: "KES", usdToKesRate: 130,
+      usdToKesRate: 130,
       footerTagline: "", metaDescription: "", logoUrl: "", primaryColor: "#DC2626",
       whatsappApiEnabled: false,
       yearsInBusiness: 0, carsInStock: 0, satisfiedClients: 0,
+      catSuv: "", catLuxury: "", catSports: "", catSedan: "",
     },
   });
 
   useEffect(() => {
     if (settings) {
+      let catImages: Record<string, string> = {};
+      try { catImages = JSON.parse((settings as any).categoryImages || "{}"); } catch {}
+
       form.reset({
         dealerName: settings.dealerName || "",
         tagline: settings.tagline || "",
@@ -128,22 +162,32 @@ export default function AdminSettings() {
         aboutTitle: settings.aboutTitle || "",
         aboutContent: settings.aboutContent || "",
         aboutImage: settings.aboutImage || "",
-        currency: (settings as any).currency || "KES",
         usdToKesRate: (settings as any).usdToKesRate || 130,
         footerTagline: (settings as any).footerTagline || "",
         metaDescription: (settings as any).metaDescription || "",
         logoUrl: (settings as any).logoUrl || "",
         primaryColor: (settings as any).primaryColor || "#DC2626",
-        whatsappApiEnabled: (settings as any).whatsappApiEnabled || false,
+        whatsappApiEnabled: (settings as any).whatsappApiEnabled === true || (settings as any).whatsappApiEnabled === "true",
         yearsInBusiness: settings.yearsInBusiness || 0,
         carsInStock: settings.carsInStock || 0,
         satisfiedClients: settings.satisfiedClients || 0,
+        catSuv: catImages["SUV"] || "",
+        catLuxury: catImages["Luxury"] || "",
+        catSports: catImages["Sports"] || "",
+        catSedan: catImages["Sedan"] || "",
       });
     }
   }, [settings, form]);
 
   const onSubmit = (values: FormValues) => {
-    updateSettings.mutate({ data: values as any }, {
+    const { catSuv, catLuxury, catSports, catSedan, ...rest } = values;
+    const categoryImages = JSON.stringify({
+      SUV: catSuv || "",
+      Luxury: catLuxury || "",
+      Sports: catSports || "",
+      Sedan: catSedan || "",
+    });
+    updateSettings.mutate({ data: { ...rest, categoryImages } as any }, {
       onSuccess: () => toast({ title: "Settings saved successfully" }),
       onError: () => toast({ title: "Error saving settings", variant: "destructive" }),
     });
@@ -153,6 +197,7 @@ export default function AdminSettings() {
     { id: "general", label: "General" },
     { id: "contact", label: "Contact" },
     { id: "content", label: "Content" },
+    { id: "categories", label: "Categories" },
     { id: "currency", label: "Currency" },
     { id: "integrations", label: "Integrations" },
     { id: "branding", label: "Branding" },
@@ -278,33 +323,42 @@ export default function AdminSettings() {
               </div>
             )}
 
+            {/* Categories Tab */}
+            {activeTab === "categories" && (
+              <div className="space-y-6">
+                <SectionHeader
+                  icon={LayoutGrid}
+                  title="Browse by Category Images"
+                  desc="Set the background images for each category on the homepage. Paste an image URL — we recommend Unsplash URLs (1000px+ wide)."
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <CategoryImageField control={form.control} name="catSuv" label="SUV" />
+                  <CategoryImageField control={form.control} name="catLuxury" label="Luxury" />
+                  <CategoryImageField control={form.control} name="catSports" label="Sports" />
+                  <CategoryImageField control={form.control} name="catSedan" label="Sedan" />
+                </div>
+                <div className="bg-blue-900/20 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-200/70">
+                  <strong className="text-blue-300">Tip:</strong> Find great car photos at{" "}
+                  <a href="https://unsplash.com/s/photos/suv-car" target="_blank" rel="noreferrer" className="underline text-blue-300 hover:text-blue-200">
+                    unsplash.com
+                  </a>
+                  . Copy the image URL and paste it above. The image should clearly show the vehicle type for best results.
+                </div>
+              </div>
+            )}
+
             {/* Currency Tab */}
             {activeTab === "currency" && (
               <div className="space-y-8">
-                <SectionHeader icon={DollarSign} title="Currency Settings" desc="Control how prices are displayed across the website" />
+                <SectionHeader icon={DollarSign} title="Currency Settings" desc="Prices are displayed in Kenyan Shillings (KES) across the website" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="currency" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs uppercase tracking-wider text-gray-400 font-bold">Default Currency</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-background border-white/10 text-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="KES">KES — Kenyan Shilling (default)</SelectItem>
-                          <SelectItem value="USD">USD — US Dollar</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
                   <Field control={form.control} name="usdToKesRate" label="USD to KES Exchange Rate" type="number" placeholder="130" />
                 </div>
-                <div className="bg-blue-900/20 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-200/70">
-                  Note: Car prices are stored in USD. The exchange rate is used to display prices in KES on the website. 
-                  Update this rate regularly to reflect current market rates.
+                <div className="bg-green-900/20 border border-green-500/20 rounded-xl p-4 text-sm text-green-200/70">
+                  Car prices are stored in USD internally and converted to KES at this rate for display. 
+                  Update regularly to reflect current exchange rates (check{" "}
+                  <a href="https://www.xe.com/currencyconverter/convert/?Amount=1&From=USD&To=KES" target="_blank" rel="noreferrer" className="underline text-green-300">XE.com</a>
+                  ).
                 </div>
               </div>
             )}

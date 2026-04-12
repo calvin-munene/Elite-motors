@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
-import { AIChatbot } from "@/components/AIChatbot";
 import { CarCard } from "@/components/CarCard";
 import { useListCars, useGetCarMakes, ListCarsParams } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -219,7 +218,6 @@ export default function Inventory() {
 
       <Footer />
       <FloatingWhatsApp />
-      <AIChatbot />
     </div>
   );
 }

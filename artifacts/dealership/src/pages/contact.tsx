@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
-import { AIChatbot } from "@/components/AIChatbot";
 import { useGetSettings, useCreateInquiry } from "@workspace/api-client-react";
 import { MapPin, Phone, Mail, Clock, Map } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -235,7 +234,6 @@ export default function Contact() {
 
       <Footer />
       <FloatingWhatsApp />
-      <AIChatbot />
     </div>
   );
 }
