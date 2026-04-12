@@ -15,7 +15,7 @@ export function Car360Viewer({ images, title }: Car360ViewerProps) {
   const [autoRotate, setAutoRotate] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
   const containerRef = useRef<HTMLDivElement>(null);
-  const autoRotateRef = useRef<NodeJS.Timeout>();
+  const autoRotateRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const totalFrames = images.length;
 

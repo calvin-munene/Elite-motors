@@ -42,7 +42,6 @@ function ImportTimeline({ status, departureDate, arrivalDate }: {
       {IMPORT_STEPS.map((step, idx) => {
         const done = idx < currentIdx;
         const active = idx === currentIdx;
-        const pending = idx > currentIdx;
         return (
           <div key={step.key} className="flex gap-4 pb-5 last:pb-0 relative">
             {/* Connector line */}
@@ -293,12 +292,6 @@ export default function CarDetail() {
   const auctionGradeLabel: Record<string, string> = {
     "S": "S — Showroom Quality (Perfect)", "5": "Grade 5 — Excellent", "4.5": "Grade 4.5 — Very Good+",
     "4": "Grade 4 — Very Good", "3.5": "Grade 3.5 — Good+", "3": "Grade 3 — Good",
-  };
-
-  const shippingStatusLabel: Record<string, string> = {
-    "at_auction": "At Auction in Japan", "purchased": "Purchased — Awaiting Export",
-    "in_transit": "In Transit (Sea Freight)", "arrived": "Arrived in Kenya",
-    "clearing": "Clearing at Port", "ready": "Ready for Delivery",
   };
 
   return (

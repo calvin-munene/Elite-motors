@@ -98,12 +98,13 @@ export function CarCard({ car }: CarCardProps) {
     }
   };
 
-  const availabilityColor = {
+  const availabilityColorMap: Record<string, string> = {
     available: "bg-green-600/90 text-white",
     reserved: "bg-orange-500/90 text-white",
     sold: "bg-red-600/90 text-white",
     in_transit: "bg-blue-600/90 text-white",
-  }[car.availability] || "bg-gray-600/90 text-white";
+  };
+  const availabilityColor = availabilityColorMap[car.availability] || "bg-gray-600/90 text-white";
 
   return (
     <div className="group bg-card border border-border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
