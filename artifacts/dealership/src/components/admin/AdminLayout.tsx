@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { data: admin, isLoading, error } = useGetAdminMe();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (error || !admin)) {
@@ -80,7 +80,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               
               return (
                 <li key={item.name}>
-                  <Link href={item.href}>
+                  <Link href={item.href} onClick={() => setSidebarOpen(false)}>
                     <div className={`
                       flex items-center px-3 py-2.5 rounded-md cursor-pointer transition-colors text-sm
                       ${isActive 
