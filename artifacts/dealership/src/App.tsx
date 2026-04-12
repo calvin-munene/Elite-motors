@@ -9,8 +9,10 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CompareProvider } from "@/contexts/CompareContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
+import { RecentlyViewedProvider } from "@/contexts/RecentlyViewedContext";
 import { useGetSettings } from "@workspace/api-client-react";
 import { AIChatbot } from "@/components/AIChatbot";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 
 import Home from "@/pages/index";
 import About from "@/pages/about";
@@ -67,7 +69,9 @@ function AppContexts({ children }: { children: React.ReactNode }) {
       <LanguageProvider>
         <CompareProvider>
           <WishlistProvider>
-            {children}
+            <RecentlyViewedProvider>
+              {children}
+            </RecentlyViewedProvider>
           </WishlistProvider>
         </CompareProvider>
       </LanguageProvider>
@@ -121,6 +125,7 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
       {!isAdmin && <AIChatbot />}
+      {!isAdmin && <RecentlyViewed />}
     </>
   );
 }
