@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { 
   LayoutDashboard, CarFront, MessageSquare, Calendar, 
   RefreshCw, DollarSign, Star, FileText, Users, 
-  Wrench, Settings, LogOut, Menu, X
+  Wrench, Settings, LogOut, Menu, X, Brain
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { name: "Journal", href: "/admin/blog", icon: FileText },
     { name: "Team", href: "/admin/team", icon: Users },
     { name: "Services", href: "/admin/services", icon: Wrench },
+    { name: "AI Knowledge", href: "/admin/chatbot", icon: Brain },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
 

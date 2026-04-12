@@ -48,6 +48,7 @@ import AdminTestimonials from "@/pages/admin/testimonials/index";
 import AdminBlog from "@/pages/admin/blog/index";
 import AdminTeam from "@/pages/admin/team/index";
 import AdminSettings from "@/pages/admin/settings/index";
+import AdminChatbotKnowledge from "@/pages/admin/chatbot/index";
 
 import "@/lib/api-setup";
 
@@ -122,6 +123,7 @@ function Router() {
         <Route path="/admin/team" component={AdminTeam} />
         <Route path="/admin/services" component={AdminSettings} />
         <Route path="/admin/settings" component={AdminSettings} />
+        <Route path="/admin/chatbot" component={AdminChatbotKnowledge} />
         <Route component={NotFound} />
       </Switch>
       {!isAdmin && <AIChatbot />}

@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bot, X, Send, Minimize2, Maximize2, Loader2 } from "lucide-react";
+import { Bot, X, Send, Minimize2, Maximize2, Loader2, Brain, Sparkles, PhoneCall } from "lucide-react";
 import { useCreateOpenaiConversation } from "@workspace/api-client-react";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  source?: "local" | "openai" | "support";
 }
 
 function renderMarkdown(text: string) {
@@ -116,7 +117,7 @@ export function AIChatbot() {
     try {
       const convId = await initConversation();
 
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "", source: undefined }]);
 
       const response = await fetch(`/api/openai/conversations/${convId}/messages`, {
         method: "POST",
@@ -129,6 +130,7 @@ export function AIChatbot() {
       const reader = response.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let msgSource: "local" | "openai" | "support" | undefined;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -142,12 +144,14 @@ export function AIChatbot() {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
+              if (data.source) msgSource = data.source;
               if (data.content) {
                 setMessages(prev => {
                   const updated = [...prev];
                   updated[updated.length - 1] = {
                     role: "assistant",
                     content: updated[updated.length - 1].content + data.content,
+                    source: msgSource,
                   };
                   return updated;
                 });
@@ -223,23 +227,45 @@ export function AIChatbot() {
                         <Bot className="w-3.5 h-3.5 text-primary" />
                       </div>
                     )}
-                    <div
-                      className={`max-w-[82%] rounded-2xl px-4 py-3 ${
-                        msg.role === "user"
-                          ? "bg-primary text-white rounded-tr-sm text-sm leading-relaxed"
-                          : "bg-white/5 border border-white/8 rounded-tl-sm"
-                      }`}
-                    >
-                      {msg.role === "user" ? (
-                        msg.content
-                      ) : msg.content === "" ? (
-                        <span className="inline-flex gap-1 items-center py-1">
-                          <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                          <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                          <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
-                        </span>
-                      ) : (
-                        renderMarkdown(msg.content)
+                    <div className="max-w-[82%] flex flex-col gap-1">
+                      <div
+                        className={`rounded-2xl px-4 py-3 ${
+                          msg.role === "user"
+                            ? "bg-primary text-white rounded-tr-sm text-sm leading-relaxed"
+                            : "bg-white/5 border border-white/8 rounded-tl-sm"
+                        }`}
+                      >
+                        {msg.role === "user" ? (
+                          msg.content
+                        ) : msg.content === "" ? (
+                          <span className="inline-flex gap-1 items-center py-1">
+                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                          </span>
+                        ) : (
+                          renderMarkdown(msg.content)
+                        )}
+                      </div>
+                      {/* Source badge for assistant messages */}
+                      {msg.role === "assistant" && msg.source && msg.content !== "" && (
+                        <div className="flex items-center gap-1 px-1">
+                          {msg.source === "local" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-green-500/70">
+                              <Brain className="w-2.5 h-2.5" /> Answered from memory
+                            </span>
+                          )}
+                          {msg.source === "openai" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-400/60">
+                              <Sparkles className="w-2.5 h-2.5" /> Powered by AI
+                            </span>
+                          )}
+                          {msg.source === "support" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-yellow-500/70">
+                              <PhoneCall className="w-2.5 h-2.5" /> Support mode
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { conversations as conversationsTable, messages as messagesTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { conversations as conversationsTable, messages as messagesTable, chatbotKnowledgeTable, siteSettingsTable } from "@workspace/db";
+import { eq, desc, sql } from "drizzle-orm";
 import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
@@ -28,125 +28,189 @@ Your expertise covers:
   - Railway Development Levy (RDL): 2% of CIF
   - Total effective tax rate often 60-80% of CIF value
 - Japanese used car imports (JDM): auction grades (S, 4.5, 4, 3.5, 3, 2, 1), chassis numbers, Japan Car Direct, STC Japan, BE FORWARD, CarFromJapan platforms
-- NTSA (National Transport Safety Authority) requirements for registration and logbook transfer
-- Common issues with Kenyan roads: high ground clearance recommendations, suspension considerations for rough roads
-- Popular dealership areas in Nairobi: Industrial Area, Ngong Road, Mombasa Road
-- Currency: Kenya Shilling (KES). Current USD to KES rate approximately 130.
-- Popular financing: KCB, Equity Bank, ABSA, Stanbic, Mwalimu SACCO hire purchase rates typically 14-18% per annum
+- Kenyan road conditions: potholes, high ground clearance needs, 4WD preference for rural areas
+- Common repairs and spare parts availability in Kenya
 
-**Technical Expertise:**
-- How to inspect a used car: checking frame, rust, paint, engine mounts, service history, mileage tampering
-- Japanese auction grades explained: Grade S (new/near new), Grade 4.5-5 (excellent), Grade 4 (very good), Grade 3.5-3 (good/normal), Grade 2 (below average), Grade 1 (poor)
-- Common problems by make/model: Toyota reliability, Subaru head gasket issues, BMW electronics costs, etc.
-- Service costs and spare parts availability in Kenya
-- Fuel consumption benchmarks for different vehicle categories
-- Safety ratings: Euro NCAP, ANCAP, JNCAP ratings
-- Technology features: adaptive cruise control, lane assist, blind spot monitoring, 360-degree cameras
+**AutoElite Motors Info:**
+- Location: Ngong Road, Nairobi (next to Prestige Plaza)
+- Phone: +254 700 234 567
+- WhatsApp: +254 700 234 567
+- Email: sales@autoelitemotors.co.ke
+- Opening Hours: Mon-Sat: 8AM-6PM | Sun: 10AM-4PM
+- Specialties: Japanese imports, luxury vehicles, financing options
 
-**Buying Guidance:**
-- How to negotiate car prices in Kenya
-- What questions to ask a dealer
-- Documentation needed: logbook, insurance, inspection certificate
-- Comprehensive vs third-party insurance considerations
-- Best value-for-money choices at different budgets (KES 500K, 1M, 2M, 3M, 5M+)
-- Red flags when buying a used car
-- Hire purchase vs outright purchase vs bank loan considerations
+**Communication Style:**
+- Friendly, professional, knowledgeable
+- Use both English and sprinkle in Swahili greetings (Habari, Asante, Karibu)
+- Always provide actionable advice
+- When relevant, suggest visiting the showroom or contacting via WhatsApp
+- Format responses with markdown: use **bold** for key points, bullet points for lists
+- Keep responses concise but comprehensive — avoid walls of text`;
 
-**Dealership Information:**
-- AutoElite Motors is a premium dealership in Kenya
-- We stock: Mercedes-Benz, BMW, Porsche, Range Rover, Toyota, Audi, Subaru, and other premium brands
-- We offer: test drives, financing arrangements, trade-ins, KRA import assistance, NTSA transfer services
-- Contact: WhatsApp +254 700 000 000 for immediate inquiries
+// Stop words to ignore when extracting keywords
+const STOP_WORDS = new Set([
+  "a","an","the","is","it","in","on","at","to","for","of","and","or","but",
+  "i","me","my","we","you","your","he","she","they","what","which","who",
+  "how","when","where","why","can","could","would","should","will","do",
+  "does","did","has","have","had","be","been","being","was","were","are",
+  "am","this","that","these","those","with","from","about","just","some",
+  "any","if","so","than","then","there","also","its","our","their","tell",
+  "me","us","please","want","need","know","get","give","take","make","go",
+  "good","best","like","much","many","more","most","very","really","bit",
+]);
 
-**Response Style:**
-- Be conversational, helpful, and knowledgeable
-- Give specific, actionable advice tailored to Kenya context
-- Use KES for pricing when relevant
-- Mention AutoElite Motors inventory when relevant
-- If asked about a specific car's price at AutoElite, invite them to browse inventory or contact us
-- Keep responses concise but comprehensive
-- Use bullet points for clarity when comparing options`;
+function extractKeywords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !STOP_WORDS.has(w));
+}
 
-router.get("/openai/conversations", async (req, res) => {
-  try {
-    const conversations = await db
-      .select()
-      .from(conversationsTable)
-      .orderBy(desc(conversationsTable.createdAt));
-    res.json(conversations.map(c => ({ ...c, createdAt: c.createdAt.toISOString() })));
-  } catch (err) {
-    req.log.error({ err }, "Error listing conversations");
-    res.status(500).json({ error: "Internal server error" });
+function computeSimilarity(queryKws: string[], storedKws: string[]): number {
+  if (!queryKws.length || !storedKws.length) return 0;
+  const storedSet = new Set(storedKws);
+  const matches = queryKws.filter(kw => storedSet.has(kw)).length;
+  return matches / queryKws.length;
+}
+
+async function findKnowledgeMatch(question: string): Promise<{ id: number; answer: string; score: number } | null> {
+  const queryKws = extractKeywords(question);
+  if (!queryKws.length) return null;
+
+  const entries = await db.select().from(chatbotKnowledgeTable).orderBy(desc(chatbotKnowledgeTable.hitCount));
+  let best: { id: number; answer: string; score: number } | null = null;
+
+  for (const entry of entries) {
+    const storedKws: string[] = JSON.parse(entry.keywords || "[]");
+    const score = computeSimilarity(queryKws, storedKws);
+    if (score >= 0.45 && (!best || score > best.score)) {
+      best = { id: entry.id, answer: entry.answer, score };
+    }
   }
-});
+  return best;
+}
+
+async function saveToKnowledge(question: string, answer: string, source: string) {
+  const keywords = extractKeywords(question);
+  try {
+    await db.insert(chatbotKnowledgeTable).values({
+      question: question.slice(0, 500),
+      answer: answer.slice(0, 5000),
+      keywords: JSON.stringify(keywords),
+      source,
+      hitCount: 0,
+    });
+  } catch {
+    // Ignore duplicate save errors
+  }
+}
+
+async function incrementHitCount(id: number) {
+  await db.update(chatbotKnowledgeTable)
+    .set({ hitCount: sql`${chatbotKnowledgeTable.hitCount} + 1`, updatedAt: new Date() })
+    .where(eq(chatbotKnowledgeTable.id, id));
+}
+
+async function getChatbotEnabled(): Promise<boolean> {
+  const settings = await db.select({ chatbotEnabled: siteSettingsTable.chatbotEnabled }).from(siteSettingsTable).limit(1);
+  return settings[0]?.chatbotEnabled !== "false";
+}
+
+// ─── Conversation routes ───────────────────────────────────────────────────────
 
 router.post("/openai/conversations", async (req, res) => {
   try {
     const { title } = req.body;
-    const [conversation] = await db
-      .insert(conversationsTable)
-      .values({ title: title || "New Conversation" })
-      .returning();
-    res.status(201).json({ ...conversation, createdAt: conversation.createdAt.toISOString() });
+    const [conv] = await db.insert(conversationsTable).values({ title: title || "Chat" }).returning();
+    res.json(conv);
   } catch (err) {
     req.log.error({ err }, "Error creating conversation");
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.get("/openai/conversations/:id", async (req, res) => {
+router.get("/openai/conversations", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const [conversation] = await db
-      .select()
-      .from(conversationsTable)
-      .where(eq(conversationsTable.id, id));
-    if (!conversation) return res.status(404).json({ error: "Conversation not found" });
-
-    const msgs = await db
-      .select()
-      .from(messagesTable)
-      .where(eq(messagesTable.conversationId, id))
-      .orderBy(messagesTable.createdAt);
-
-    res.json({
-      ...conversation,
-      createdAt: conversation.createdAt.toISOString(),
-      messages: msgs.map(m => ({ ...m, createdAt: m.createdAt.toISOString() })),
-    });
+    const convs = await db.select().from(conversationsTable).orderBy(desc(conversationsTable.createdAt));
+    res.json(convs);
   } catch (err) {
-    req.log.error({ err }, "Error getting conversation");
+    req.log.error({ err }, "Error fetching conversations");
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.delete("/openai/conversations/:id", async (req, res) => {
+router.get("/openai/conversations/:id/messages", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    await db.delete(messagesTable).where(eq(messagesTable.conversationId, id));
-    await db.delete(conversationsTable).where(eq(conversationsTable.id, id));
-    res.status(204).send();
+    const id = Number(req.params.id);
+    const msgs = await db.select().from(messagesTable).where(eq(messagesTable.conversationId, id)).orderBy(messagesTable.createdAt);
+    res.json(msgs);
   } catch (err) {
-    req.log.error({ err }, "Error deleting conversation");
+    req.log.error({ err }, "Error fetching messages");
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// ─── Main message handler ──────────────────────────────────────────────────────
 
 router.post("/openai/conversations/:id/messages", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = Number(req.params.id);
     const { content } = req.body;
-
     if (!content) return res.status(400).json({ error: "Content is required" });
 
-    // Save user message
-    await db.insert(messagesTable).values({
-      conversationId: id,
-      role: "user",
-      content,
-    });
+    const chatbotEnabled = await getChatbotEnabled();
 
-    // Get conversation history
+    // Save user message
+    await db.insert(messagesTable).values({ conversationId: id, role: "user", content });
+
+    // 1. Try local knowledge base first
+    const localMatch = await findKnowledgeMatch(content);
+
+    if (localMatch && localMatch.score >= 0.45) {
+      // Serve from local knowledge
+      await incrementHitCount(localMatch.id);
+
+      const answer = localMatch.answer;
+
+      // Save assistant reply to messages
+      await db.insert(messagesTable).values({ conversationId: id, role: "assistant", content: answer });
+
+      // Stream it back word-by-word for a natural feel
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const words = answer.split(" ");
+      for (const word of words) {
+        res.write(`data: ${JSON.stringify({ content: word + " ", source: "local" })}\n\n`);
+        await new Promise(r => setTimeout(r, 18));
+      }
+      res.write(`data: ${JSON.stringify({ done: true, source: "local" })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // 2. If chatbot is DISABLED and no local knowledge — return support message
+    if (!chatbotEnabled) {
+      const supportMsg = "I'm sorry, the AI assistant is currently unavailable. Please reach out to us directly:\n\n" +
+        "**WhatsApp:** [+254 700 234 567](https://wa.me/254700234567)\n" +
+        "**Email:** sales@autoelitemotors.co.ke\n" +
+        "**Phone:** +254 700 234 567\n\n" +
+        "Our team is available Mon-Sat: 8AM-6PM | Sun: 10AM-4PM and will be happy to assist you!";
+
+      await db.insert(messagesTable).values({ conversationId: id, role: "assistant", content: supportMsg });
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.write(`data: ${JSON.stringify({ content: supportMsg, source: "support" })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, source: "support" })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // 3. Chatbot enabled + no local match — call OpenAI
     const history = await db
       .select()
       .from(messagesTable)
@@ -172,21 +236,22 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     });
 
     for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        fullResponse += content;
-        res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      const chunkContent = chunk.choices[0]?.delta?.content;
+      if (chunkContent) {
+        fullResponse += chunkContent;
+        res.write(`data: ${JSON.stringify({ content: chunkContent, source: "openai" })}\n\n`);
       }
     }
 
-    // Save assistant response
-    await db.insert(messagesTable).values({
-      conversationId: id,
-      role: "assistant",
-      content: fullResponse,
-    });
+    // Save to DB
+    await db.insert(messagesTable).values({ conversationId: id, role: "assistant", content: fullResponse });
 
-    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    // Learn from this interaction — save to knowledge base for future use
+    if (fullResponse.length > 20) {
+      await saveToKnowledge(content, fullResponse, "openai");
+    }
+
+    res.write(`data: ${JSON.stringify({ done: true, source: "openai" })}\n\n`);
     res.end();
   } catch (err) {
     req.log.error({ err }, "Error sending message");
@@ -196,6 +261,39 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
       res.write(`data: ${JSON.stringify({ error: "Stream error" })}\n\n`);
       res.end();
     }
+  }
+});
+
+// ─── Admin: Knowledge base management ─────────────────────────────────────────
+
+router.get("/openai/knowledge", async (req, res) => {
+  try {
+    const entries = await db.select().from(chatbotKnowledgeTable).orderBy(desc(chatbotKnowledgeTable.hitCount));
+    res.json(entries);
+  } catch (err) {
+    req.log.error({ err }, "Error fetching knowledge");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/openai/knowledge/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await db.delete(chatbotKnowledgeTable).where(eq(chatbotKnowledgeTable.id, id));
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error deleting knowledge entry");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/openai/knowledge", async (req, res) => {
+  try {
+    await db.delete(chatbotKnowledgeTable);
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error clearing knowledge base");
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
