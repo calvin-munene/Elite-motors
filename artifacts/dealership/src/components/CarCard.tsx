@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Car } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Settings, Fuel, Gauge, Heart, Scale, Plane } from "lucide-react";
+import { MapPin, Settings, Fuel, Gauge, Heart, Scale, Plane, Share2 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useCompare } from "@/contexts/CompareContext";
@@ -220,13 +220,25 @@ export function CarCard({ car }: CarCardProps) {
             </Button>
           </Link>
           <a
-            href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=I'm interested in the ${car.year} ${car.title} (${formatPrice(car.price)})`}
+            href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Hi, I'm interested in the ${car.year} ${car.title} (${formatPrice(car.price)}) at AutoElite Motors. Can you share more details?`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-shrink-0"
+            title="Chat with sales rep on WhatsApp"
           >
             <Button variant="outline" className="w-9 h-9 p-0 rounded-sm bg-green-600 hover:bg-green-700 text-white border-none">
               <FaWhatsapp className="w-4 h-4" />
+            </Button>
+          </a>
+          <a
+            href={`https://wa.me/?text=Check out this ${car.year} ${car.title} for ${formatPrice(car.price)} at AutoElite Motors Nairobi! ${window.location.origin}/cars/${car.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0"
+            title="Share this vehicle on WhatsApp"
+          >
+            <Button variant="outline" className="w-9 h-9 p-0 rounded-sm bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10">
+              <Share2 className="w-3.5 h-3.5" />
             </Button>
           </a>
         </div>

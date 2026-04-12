@@ -7,7 +7,7 @@ import { CarCard } from "@/components/CarCard";
 import { Car360Viewer } from "@/components/Car360Viewer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Info, Shield, ArrowLeft, Fuel, Settings, Gauge, MapPin, Plane, Star, Calculator } from "lucide-react";
+import { Check, Info, Shield, ArrowLeft, Fuel, Settings, Gauge, MapPin, Plane, Star, Calculator, Share2, ChevronDown, ChevronUp, CheckCircle2, Circle, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -15,7 +15,194 @@ import { useCompare } from "@/contexts/CompareContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { useRecentlyViewed } from "@/contexts/RecentlyViewedContext";
 import { Scale, Heart } from "lucide-react";
+
+const IMPORT_STEPS = [
+  { key: "at_auction", label: "At Auction in Japan", desc: "Vehicle listed at Japanese auction" },
+  { key: "purchased", label: "Purchased", desc: "Bid won & payment confirmed" },
+  { key: "in_transit", label: "Shipped (Sea Freight)", desc: "On the vessel to Kenya" },
+  { key: "arrived", label: "Arrived in Mombasa", desc: "Vehicle docked at Mombasa Port" },
+  { key: "clearing", label: "Clearing at Port", desc: "KRA & KEBS inspection underway" },
+  { key: "ready", label: "Ready for Delivery", desc: "Cleared & available at our showroom" },
+];
+
+const STEP_INDEX: Record<string, number> = {
+  at_auction: 0, purchased: 1, in_transit: 2, arrived: 3, clearing: 4, ready: 5,
+};
+
+function ImportTimeline({ status, departureDate, arrivalDate }: {
+  status: string;
+  departureDate?: string | null;
+  arrivalDate?: string | null;
+}) {
+  const currentIdx = STEP_INDEX[status] ?? 0;
+  return (
+    <div className="relative">
+      {IMPORT_STEPS.map((step, idx) => {
+        const done = idx < currentIdx;
+        const active = idx === currentIdx;
+        const pending = idx > currentIdx;
+        return (
+          <div key={step.key} className="flex gap-4 pb-5 last:pb-0 relative">
+            {/* Connector line */}
+            {idx < IMPORT_STEPS.length - 1 && (
+              <div className={`absolute left-[15px] top-7 w-0.5 h-[calc(100%-12px)] ${done ? "bg-green-500" : "bg-white/10"}`} />
+            )}
+            {/* Icon */}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all z-10 ${
+              done ? "bg-green-600 border-green-500" :
+              active ? "bg-primary border-primary animate-pulse" :
+              "bg-white/5 border-white/15"
+            }`}>
+              {done ? <CheckCircle2 className="w-4 h-4 text-white" /> :
+               active ? <Clock className="w-3.5 h-3.5 text-white" /> :
+               <Circle className="w-3.5 h-3.5 text-white/30" />}
+            </div>
+            {/* Text */}
+            <div className="flex-1 pt-0.5">
+              <div className={`text-sm font-bold ${done ? "text-green-400" : active ? "text-white" : "text-gray-600"}`}>
+                {step.label}
+              </div>
+              <div className={`text-xs mt-0.5 ${active ? "text-gray-300" : "text-gray-600"}`}>{step.desc}</div>
+              {step.key === "in_transit" && departureDate && (
+                <div className="text-xs text-blue-300/70 mt-0.5">Departed: {new Date(departureDate).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</div>
+              )}
+              {step.key === "arrived" && arrivalDate && (
+                <div className="text-xs text-blue-300/70 mt-0.5">Arrival: {new Date(arrivalDate).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</div>
+              )}
+              {active && (
+                <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" /> Current Stage
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FinanceCalculator({ carPriceKes }: { carPriceKes: number }) {
+  const [open, setOpen] = useState(false);
+  const [depositPct, setDepositPct] = useState(20);
+  const [months, setMonths] = useState(48);
+  const [rate, setRate] = useState(14);
+
+  const deposit = Math.round(carPriceKes * depositPct / 100);
+  const principal = carPriceKes - deposit;
+  const monthlyRate = rate / 100 / 12;
+  const emi = monthlyRate === 0 ? principal / months :
+    Math.round(principal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1));
+  const totalPayable = emi * months + deposit;
+  const totalInterest = totalPayable - carPriceKes;
+
+  const fmt = (n: number) => "Ksh " + new Intl.NumberFormat("en-KE").format(Math.round(n));
+
+  return (
+    <div className="border border-white/10 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-5 py-4 bg-white/5 hover:bg-white/8 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <Calculator className="w-4 h-4 text-primary" />
+          <span className="text-sm font-bold text-white uppercase tracking-wider">Finance Calculator</span>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+      </button>
+
+      {open && (
+        <div className="px-5 py-5 space-y-5 bg-background">
+          {/* Monthly EMI highlight */}
+          <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 text-center">
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Estimated Monthly Payment</div>
+            <div className="text-3xl font-bold text-white">{fmt(emi)}</div>
+            <div className="text-xs text-gray-500 mt-1">{months} months @ {rate}% p.a.</div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Deposit */}
+            <div>
+              <div className="flex justify-between mb-1.5">
+                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider">Deposit ({depositPct}%)</label>
+                <span className="text-xs text-white font-bold">{fmt(deposit)}</span>
+              </div>
+              <input
+                type="range" min={10} max={50} step={5} value={depositPct}
+                onChange={e => setDepositPct(Number(e.target.value))}
+                className="w-full accent-primary h-1.5 rounded-full"
+              />
+              <div className="flex justify-between text-[10px] text-gray-600 mt-1"><span>10%</span><span>50%</span></div>
+            </div>
+
+            {/* Loan Period */}
+            <div>
+              <div className="flex justify-between mb-2">
+                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider">Loan Period</label>
+                <span className="text-xs text-white font-bold">{months} months</span>
+              </div>
+              <div className="flex gap-2">
+                {[12, 24, 36, 48, 60, 72].map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setMonths(m)}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${months === m ? "bg-primary text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Interest Rate */}
+            <div>
+              <div className="flex justify-between mb-1.5">
+                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider">Interest Rate (% p.a.)</label>
+                <span className="text-xs text-white font-bold">{rate}%</span>
+              </div>
+              <input
+                type="range" min={8} max={25} step={0.5} value={rate}
+                onChange={e => setRate(Number(e.target.value))}
+                className="w-full accent-primary h-1.5 rounded-full"
+              />
+              <div className="flex justify-between text-[10px] text-gray-600 mt-1"><span>8%</span><span>25%</span></div>
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="space-y-2 border-t border-white/8 pt-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Car Price</span>
+              <span className="text-white">{fmt(carPriceKes)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Deposit ({depositPct}%)</span>
+              <span className="text-white">{fmt(deposit)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Loan Amount</span>
+              <span className="text-white">{fmt(principal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Total Interest</span>
+              <span className="text-orange-400">{fmt(totalInterest)}</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-white/8 font-bold">
+              <span className="text-gray-300">Total Payable</span>
+              <span className="text-white">{fmt(totalPayable)}</span>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-gray-600 leading-relaxed">
+            * Estimates only. Actual rates depend on your bank and credit profile. Contact us to connect you with our financing partners.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function LiveViewers({ carId }: { carId: number }) {
   const [viewers, setViewers] = useState(() => Math.floor(Math.random() * 8) + 2);
@@ -44,8 +231,13 @@ export default function CarDetail() {
   const { t } = useLanguage();
   const { toast } = useToast();
 
+  const { addRecentCar } = useRecentlyViewed();
   const [activeImage, setActiveImage] = useState(0);
   const [view360, setView360] = useState(false);
+
+  useEffect(() => {
+    if (car) addRecentCar(car);
+  }, [car?.id]);
 
   if (isLoading) {
     return (
@@ -172,58 +364,59 @@ export default function CarDetail() {
                 )}
               </div>
 
-              {/* Japanese Import Details */}
+              {/* Japanese Import Details + Timeline */}
               {car.isJapaneseImport && (
-                <section className="bg-blue-900/20 border border-blue-500/20 rounded-xl p-6">
-                  <h2 className="font-serif text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <section className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-6 space-y-6">
+                  <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
                     <Plane className="w-5 h-5 text-blue-400" />
                     Japanese Import Details
                   </h2>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+
+                  {/* Key stats row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                     {car.auctionGrade && (
-                      <div className="bg-blue-900/20 rounded-lg p-3">
+                      <div className="bg-blue-900/20 border border-blue-500/15 rounded-lg p-3">
                         <div className="text-xs text-blue-300 uppercase tracking-wider font-bold mb-1 flex items-center gap-1">
                           <Star className="w-3 h-3" /> Auction Grade
                         </div>
-                        <div className="text-white font-bold text-lg">{car.auctionGrade}</div>
-                        <div className="text-blue-200/70 text-xs mt-1">
+                        <div className="text-white font-bold text-xl">{car.auctionGrade}</div>
+                        <div className="text-blue-200/60 text-[11px] mt-0.5">
                           {auctionGradeLabel[car.auctionGrade] || `Grade ${car.auctionGrade}`}
                         </div>
                       </div>
                     )}
                     {car.chassisNumber && (
-                      <div className="bg-blue-900/20 rounded-lg p-3">
+                      <div className="bg-blue-900/20 border border-blue-500/15 rounded-lg p-3">
                         <div className="text-xs text-blue-300 uppercase tracking-wider font-bold mb-1">{t.car.chassisNo}</div>
                         <div className="text-white font-mono text-sm">{car.chassisNumber}</div>
                       </div>
                     )}
-                    {car.shippingStatus && (
-                      <div className="bg-blue-900/20 rounded-lg p-3">
-                        <div className="text-xs text-blue-300 uppercase tracking-wider font-bold mb-1">{t.car.shippingStatus}</div>
-                        <div className="text-white text-sm">{shippingStatusLabel[car.shippingStatus] || car.shippingStatus}</div>
+                    <div className="bg-blue-900/20 border border-blue-500/15 rounded-lg p-3">
+                      <div className="text-xs text-blue-300 uppercase tracking-wider font-bold mb-1">Import Status</div>
+                      <div className="text-white text-sm font-semibold">
+                        {IMPORT_STEPS[STEP_INDEX[car.shippingStatus || "at_auction"] ?? 0]?.label || "In Progress"}
                       </div>
-                    )}
-                    {car.japanDepartureDate && (
-                      <div className="bg-blue-900/20 rounded-lg p-3">
-                        <div className="text-xs text-blue-300 uppercase tracking-wider font-bold mb-1">{t.car.departureDate}</div>
-                        <div className="text-white text-sm">{new Date(car.japanDepartureDate).toLocaleDateString("en-KE", { day: "numeric", month: "long", year: "numeric" })}</div>
-                      </div>
-                    )}
-                    {car.kenyaArrivalDate && (
-                      <div className="bg-blue-900/20 rounded-lg p-3">
-                        <div className="text-xs text-blue-300 uppercase tracking-wider font-bold mb-1">{t.car.arrivalDate}</div>
-                        <div className="text-white text-sm">{new Date(car.kenyaArrivalDate).toLocaleDateString("en-KE", { day: "numeric", month: "long", year: "numeric" })}</div>
-                      </div>
-                    )}
+                    </div>
                   </div>
-                  <div className="mt-4">
-                    <Link href="/kra-calculator">
-                      <button className="flex items-center gap-2 text-xs text-blue-300 hover:text-blue-100 transition-colors border border-blue-500/30 hover:border-blue-400/50 rounded-full px-4 py-2">
-                        <Calculator className="w-3.5 h-3.5" />
-                        Calculate KRA Import Duty for this vehicle
-                      </button>
-                    </Link>
-                  </div>
+
+                  {/* Import Timeline */}
+                  {car.shippingStatus && (
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-blue-300 mb-4">Shipping Timeline</h3>
+                      <ImportTimeline
+                        status={car.shippingStatus}
+                        departureDate={car.japanDepartureDate}
+                        arrivalDate={car.kenyaArrivalDate}
+                      />
+                    </div>
+                  )}
+
+                  <Link href="/kra-calculator">
+                    <button className="flex items-center gap-2 text-xs text-blue-300 hover:text-blue-100 transition-colors border border-blue-500/30 hover:border-blue-400/50 rounded-full px-4 py-2">
+                      <Calculator className="w-3.5 h-3.5" />
+                      Calculate KRA Import Duty for this vehicle
+                    </button>
+                  </Link>
                 </section>
               )}
 
@@ -348,22 +541,28 @@ export default function CarDetail() {
                       Book Test Drive
                     </Button>
                   </Link>
-                  <div className="grid grid-cols-2 gap-3">
+
+                  {/* Chat with Sales Rep */}
+                  <a
+                    href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Hi! I'm interested in the ${car.year} ${car.title} priced at ${formatPrice(car.price)}. Can a sales rep assist me with more details?`}
+                    target="_blank" rel="noopener noreferrer"
+                  >
+                    <Button className="w-full h-11 text-xs font-bold uppercase tracking-wider rounded-sm bg-green-600 hover:bg-green-700 text-white border-none">
+                      <FaWhatsapp className="w-4 h-4 mr-2" /> Chat with a Sales Rep
+                    </Button>
+                  </a>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Share on WhatsApp */}
                     <a
-                      href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=I'm interested in the ${car.year} ${car.title} (${formatPrice(car.price)})`}
+                      href={`https://wa.me/?text=Check out this ${car.year} ${car.title} for ${formatPrice(car.price)} at AutoElite Motors Nairobi! ${window.location.href}`}
                       target="_blank" rel="noopener noreferrer"
+                      title="Share this listing on WhatsApp"
                     >
-                      <Button variant="outline" className="w-full h-10 text-xs font-bold uppercase tracking-wider rounded-sm border-green-600/40 text-green-400 hover:bg-green-600 hover:text-white hover:border-green-600">
-                        <FaWhatsapp className="w-4 h-4 mr-1.5" /> WhatsApp
+                      <Button variant="outline" className="w-full h-10 text-xs font-bold rounded-sm border-white/15 text-gray-300 hover:bg-white/10 gap-1.5">
+                        <Share2 className="w-3.5 h-3.5" /> Share
                       </Button>
                     </a>
-                    <Link href={`/financing?carId=${car.id}`}>
-                      <Button variant="outline" className="w-full h-10 text-xs font-bold uppercase tracking-wider rounded-sm border-white/20 text-white hover:bg-white/10">
-                        Finance
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={handleWishlist}
                       className={`h-10 flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wider rounded-sm border transition-colors ${
@@ -385,8 +584,11 @@ export default function CarDetail() {
                   </div>
                 </div>
 
+                {/* Finance Calculator */}
+                <FinanceCalculator carPriceKes={car.price * (settings?.usdToKesRate ?? 130)} />
+
                 {/* Dealer info */}
-                <div className="pt-4 border-t border-white/8 text-xs text-gray-500 space-y-1">
+                <div className="pt-2 border-t border-white/8 text-xs text-gray-500 space-y-1">
                   <div className="flex items-center gap-2"><MapPin className="w-3 h-3 text-primary" /> {settings?.address || "Ngong Road, Nairobi"}</div>
                   <div className="flex items-center gap-2"><Shield className="w-3 h-3 text-primary" /> Verified Dealer • NTSA Compliant</div>
                 </div>
