@@ -24,6 +24,8 @@ function formatCar(car: typeof carsTable.$inferSelect) {
     comfortFeatures: (car.comfortFeatures as string[]) || [],
     techFeatures: (car.techFeatures as string[]) || [],
     gallery: (car.gallery as string[]) || [],
+    isJapaneseImport: car.isJapaneseImport ?? false,
+    viewCount: car.viewCount ?? 0,
     createdAt: car.createdAt.toISOString(),
     updatedAt: car.updatedAt.toISOString(),
   };
@@ -35,7 +37,7 @@ router.get("/cars", async (req, res) => {
       make, model, yearMin, yearMax, priceMin, priceMax,
       bodyType, fuelType, transmission, condition, color,
       availability, featured, category, sortBy, limit = "20",
-      offset = "0", search
+      offset = "0", search, japaneseImport
     } = req.query as Record<string, string>;
 
     const conditions = [];
@@ -54,6 +56,7 @@ router.get("/cars", async (req, res) => {
     if (availability) conditions.push(eq(carsTable.availability, availability));
     if (featured === "true") conditions.push(eq(carsTable.isFeatured, true));
     if (category) conditions.push(ilike(carsTable.category, `%${category}%`));
+    if (japaneseImport === "true") conditions.push(eq(carsTable.isJapaneseImport, true));
     if (search) {
       conditions.push(
         or(

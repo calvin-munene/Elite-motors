@@ -48,6 +48,7 @@ export const ListCarsQueryParams = zod.object({
   limit: zod.coerce.number().default(listCarsQueryLimitDefault),
   offset: zod.coerce.number().default(listCarsQueryOffsetDefault),
   search: zod.coerce.string().optional(),
+  japaneseImport: zod.coerce.boolean().optional(),
 });
 
 export const ListCarsResponse = zod.object({
@@ -88,6 +89,13 @@ export const ListCarsResponse = zod.object({
       financingAvailable: zod.boolean(),
       location: zod.string().nullish(),
       category: zod.string().nullish(),
+      isJapaneseImport: zod.boolean(),
+      auctionGrade: zod.string().nullish(),
+      chassisNumber: zod.string().nullish(),
+      shippingStatus: zod.string().nullish(),
+      japanDepartureDate: zod.string().nullish(),
+      kenyaArrivalDate: zod.string().nullish(),
+      viewCount: zod.number(),
       createdAt: zod.string(),
       updatedAt: zod.string(),
     }),
@@ -134,6 +142,12 @@ export const CreateCarBody = zod.object({
   financingAvailable: zod.boolean().optional(),
   location: zod.string().nullish(),
   category: zod.string().nullish(),
+  isJapaneseImport: zod.boolean().optional(),
+  auctionGrade: zod.string().nullish(),
+  chassisNumber: zod.string().nullish(),
+  shippingStatus: zod.string().nullish(),
+  japanDepartureDate: zod.string().nullish(),
+  kenyaArrivalDate: zod.string().nullish(),
 });
 
 /**
@@ -181,6 +195,13 @@ export const GetFeaturedCarsResponseItem = zod.object({
   financingAvailable: zod.boolean(),
   location: zod.string().nullish(),
   category: zod.string().nullish(),
+  isJapaneseImport: zod.boolean(),
+  auctionGrade: zod.string().nullish(),
+  chassisNumber: zod.string().nullish(),
+  shippingStatus: zod.string().nullish(),
+  japanDepartureDate: zod.string().nullish(),
+  kenyaArrivalDate: zod.string().nullish(),
+  viewCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -247,6 +268,13 @@ export const GetCarResponse = zod.object({
   financingAvailable: zod.boolean(),
   location: zod.string().nullish(),
   category: zod.string().nullish(),
+  isJapaneseImport: zod.boolean(),
+  auctionGrade: zod.string().nullish(),
+  chassisNumber: zod.string().nullish(),
+  shippingStatus: zod.string().nullish(),
+  japanDepartureDate: zod.string().nullish(),
+  kenyaArrivalDate: zod.string().nullish(),
+  viewCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -292,6 +320,12 @@ export const UpdateCarBody = zod.object({
   financingAvailable: zod.boolean().optional(),
   location: zod.string().nullish(),
   category: zod.string().nullish(),
+  isJapaneseImport: zod.boolean().optional(),
+  auctionGrade: zod.string().nullish(),
+  chassisNumber: zod.string().nullish(),
+  shippingStatus: zod.string().nullish(),
+  japanDepartureDate: zod.string().nullish(),
+  kenyaArrivalDate: zod.string().nullish(),
 });
 
 export const UpdateCarResponse = zod.object({
@@ -330,6 +364,13 @@ export const UpdateCarResponse = zod.object({
   financingAvailable: zod.boolean(),
   location: zod.string().nullish(),
   category: zod.string().nullish(),
+  isJapaneseImport: zod.boolean(),
+  auctionGrade: zod.string().nullish(),
+  chassisNumber: zod.string().nullish(),
+  shippingStatus: zod.string().nullish(),
+  japanDepartureDate: zod.string().nullish(),
+  kenyaArrivalDate: zod.string().nullish(),
+  viewCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -384,6 +425,13 @@ export const GetCarBySlugResponse = zod.object({
   financingAvailable: zod.boolean(),
   location: zod.string().nullish(),
   category: zod.string().nullish(),
+  isJapaneseImport: zod.boolean(),
+  auctionGrade: zod.string().nullish(),
+  chassisNumber: zod.string().nullish(),
+  shippingStatus: zod.string().nullish(),
+  japanDepartureDate: zod.string().nullish(),
+  kenyaArrivalDate: zod.string().nullish(),
+  viewCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -437,6 +485,13 @@ export const GetRelatedCarsResponseItem = zod.object({
   financingAvailable: zod.boolean(),
   location: zod.string().nullish(),
   category: zod.string().nullish(),
+  isJapaneseImport: zod.boolean(),
+  auctionGrade: zod.string().nullish(),
+  chassisNumber: zod.string().nullish(),
+  shippingStatus: zod.string().nullish(),
+  japanDepartureDate: zod.string().nullish(),
+  kenyaArrivalDate: zod.string().nullish(),
+  viewCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -917,7 +972,9 @@ export const GetSettingsResponse = zod.object({
   email: zod.string().nullish(),
   address: zod.string().nullish(),
   city: zod.string().nullish(),
+  country: zod.string().nullish(),
   googleMapsUrl: zod.string().nullish(),
+  googleMapsEmbedUrl: zod.string().nullish(),
   facebookUrl: zod.string().nullish(),
   instagramUrl: zod.string().nullish(),
   twitterUrl: zod.string().nullish(),
@@ -925,12 +982,28 @@ export const GetSettingsResponse = zod.object({
   openingHours: zod.string().nullish(),
   heroTitle: zod.string().nullish(),
   heroSubtitle: zod.string().nullish(),
+  heroImage: zod.string().nullish(),
   aboutTitle: zod.string().nullish(),
   aboutContent: zod.string().nullish(),
   aboutImage: zod.string().nullish(),
   yearsInBusiness: zod.number().nullish(),
   carsInStock: zod.number().nullish(),
   satisfiedClients: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  usdToKesRate: zod.number().nullish(),
+  inventoryTitle: zod.string().nullish(),
+  inventorySubtitle: zod.string().nullish(),
+  servicesTitle: zod.string().nullish(),
+  servicesSubtitle: zod.string().nullish(),
+  contactTitle: zod.string().nullish(),
+  contactSubtitle: zod.string().nullish(),
+  footerTagline: zod.string().nullish(),
+  whatsappApiEnabled: zod.string().nullish(),
+  whatsappApiToken: zod.string().nullish(),
+  metaDescription: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  faviconUrl: zod.string().nullish(),
+  primaryColor: zod.string().nullish(),
 });
 
 /**
@@ -944,7 +1017,9 @@ export const UpdateSettingsBody = zod.object({
   email: zod.string().nullish(),
   address: zod.string().nullish(),
   city: zod.string().nullish(),
+  country: zod.string().nullish(),
   googleMapsUrl: zod.string().nullish(),
+  googleMapsEmbedUrl: zod.string().nullish(),
   facebookUrl: zod.string().nullish(),
   instagramUrl: zod.string().nullish(),
   twitterUrl: zod.string().nullish(),
@@ -952,12 +1027,28 @@ export const UpdateSettingsBody = zod.object({
   openingHours: zod.string().nullish(),
   heroTitle: zod.string().nullish(),
   heroSubtitle: zod.string().nullish(),
+  heroImage: zod.string().nullish(),
   aboutTitle: zod.string().nullish(),
   aboutContent: zod.string().nullish(),
   aboutImage: zod.string().nullish(),
   yearsInBusiness: zod.number().nullish(),
   carsInStock: zod.number().nullish(),
   satisfiedClients: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  usdToKesRate: zod.number().nullish(),
+  inventoryTitle: zod.string().nullish(),
+  inventorySubtitle: zod.string().nullish(),
+  servicesTitle: zod.string().nullish(),
+  servicesSubtitle: zod.string().nullish(),
+  contactTitle: zod.string().nullish(),
+  contactSubtitle: zod.string().nullish(),
+  footerTagline: zod.string().nullish(),
+  whatsappApiEnabled: zod.string().nullish(),
+  whatsappApiToken: zod.string().nullish(),
+  metaDescription: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  faviconUrl: zod.string().nullish(),
+  primaryColor: zod.string().nullish(),
 });
 
 export const UpdateSettingsResponse = zod.object({
@@ -968,7 +1059,9 @@ export const UpdateSettingsResponse = zod.object({
   email: zod.string().nullish(),
   address: zod.string().nullish(),
   city: zod.string().nullish(),
+  country: zod.string().nullish(),
   googleMapsUrl: zod.string().nullish(),
+  googleMapsEmbedUrl: zod.string().nullish(),
   facebookUrl: zod.string().nullish(),
   instagramUrl: zod.string().nullish(),
   twitterUrl: zod.string().nullish(),
@@ -976,12 +1069,28 @@ export const UpdateSettingsResponse = zod.object({
   openingHours: zod.string().nullish(),
   heroTitle: zod.string().nullish(),
   heroSubtitle: zod.string().nullish(),
+  heroImage: zod.string().nullish(),
   aboutTitle: zod.string().nullish(),
   aboutContent: zod.string().nullish(),
   aboutImage: zod.string().nullish(),
   yearsInBusiness: zod.number().nullish(),
   carsInStock: zod.number().nullish(),
   satisfiedClients: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  usdToKesRate: zod.number().nullish(),
+  inventoryTitle: zod.string().nullish(),
+  inventorySubtitle: zod.string().nullish(),
+  servicesTitle: zod.string().nullish(),
+  servicesSubtitle: zod.string().nullish(),
+  contactTitle: zod.string().nullish(),
+  contactSubtitle: zod.string().nullish(),
+  footerTagline: zod.string().nullish(),
+  whatsappApiEnabled: zod.string().nullish(),
+  whatsappApiToken: zod.string().nullish(),
+  metaDescription: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  faviconUrl: zod.string().nullish(),
+  primaryColor: zod.string().nullish(),
 });
 
 /**
@@ -1152,4 +1261,63 @@ export const CreateFinancingInquiryBody = zod.object({
   loanTermMonths: zod.number().nullish(),
   employmentStatus: zod.string().nullish(),
   message: zod.string().nullish(),
+});
+
+/**
+ * @summary List all conversations
+ */
+export const ListOpenaiConversationsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListOpenaiConversationsResponse = zod.array(
+  ListOpenaiConversationsResponseItem,
+);
+
+/**
+ * @summary Create a new conversation
+ */
+export const CreateOpenaiConversationBody = zod.object({
+  title: zod.string(),
+});
+
+/**
+ * @summary Get conversation with messages
+ */
+export const GetOpenaiConversationParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetOpenaiConversationResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  createdAt: zod.coerce.date(),
+  messages: zod.array(
+    zod.object({
+      id: zod.number(),
+      conversationId: zod.number(),
+      role: zod.string(),
+      content: zod.string(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Delete a conversation
+ */
+export const DeleteOpenaiConversationParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Send a text message and receive a streaming text response
+ */
+export const SendOpenaiMessageParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const SendOpenaiMessageBody = zod.object({
+  content: zod.string(),
 });

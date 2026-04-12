@@ -11,6 +11,7 @@ import settingsRouter from "./settings";
 import adminRouter from "./admin";
 import tradeInsRouter from "./trade-ins";
 import financingRouter from "./financing";
+import openaiRouter from "./openai/index";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(settingsRouter);
 router.use(adminRouter);
 router.use(tradeInsRouter);
 router.use(financingRouter);
+router.use(openaiRouter);
 
 export default router;

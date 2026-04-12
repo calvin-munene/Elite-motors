@@ -14,7 +14,9 @@ export interface SiteSettings {
   email?: string | null;
   address?: string | null;
   city?: string | null;
+  country?: string | null;
   googleMapsUrl?: string | null;
+  googleMapsEmbedUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   twitterUrl?: string | null;
@@ -22,10 +24,26 @@ export interface SiteSettings {
   openingHours?: string | null;
   heroTitle?: string | null;
   heroSubtitle?: string | null;
+  heroImage?: string | null;
   aboutTitle?: string | null;
   aboutContent?: string | null;
   aboutImage?: string | null;
   yearsInBusiness?: number | null;
   carsInStock?: number | null;
   satisfiedClients?: number | null;
+  currency?: string | null;
+  usdToKesRate?: number | null;
+  inventoryTitle?: string | null;
+  inventorySubtitle?: string | null;
+  servicesTitle?: string | null;
+  servicesSubtitle?: string | null;
+  contactTitle?: string | null;
+  contactSubtitle?: string | null;
+  footerTagline?: string | null;
+  whatsappApiEnabled?: string | null;
+  whatsappApiToken?: string | null;
+  metaDescription?: string | null;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
+  primaryColor?: string | null;
 }

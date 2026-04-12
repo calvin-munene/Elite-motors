@@ -4,6 +4,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { CompareProvider } from "@/contexts/CompareContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
+import { useGetSettings } from "@workspace/api-client-react";
+
 import Home from "@/pages/index";
 import About from "@/pages/about";
 import Inventory from "@/pages/inventory";
@@ -21,6 +27,9 @@ import Contact from "@/pages/contact";
 import FAQ from "@/pages/faq";
 import PrivacyPolicy from "@/pages/privacy";
 import TermsConditions from "@/pages/terms";
+import Compare from "@/pages/compare";
+import Wishlist from "@/pages/wishlist";
+import KRACalculator from "@/pages/kra-calculator";
 
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/index";
@@ -36,9 +45,25 @@ import AdminBlog from "@/pages/admin/blog/index";
 import AdminTeam from "@/pages/admin/team/index";
 import AdminSettings from "@/pages/admin/settings/index";
 
-import "@/lib/api-setup"; // Import api setup to set auth token getter
+import "@/lib/api-setup";
 
 const queryClient = new QueryClient();
+
+function AppContexts({ children }: { children: React.ReactNode }) {
+  const { data: settings } = useGetSettings();
+  const kesRate = settings?.usdToKesRate ?? 130;
+  return (
+    <CurrencyProvider kesRate={kesRate}>
+      <LanguageProvider>
+        <CompareProvider>
+          <WishlistProvider>
+            {children}
+          </WishlistProvider>
+        </CompareProvider>
+      </LanguageProvider>
+    </CurrencyProvider>
+  );
+}
 
 function Router() {
   return (
@@ -60,8 +85,10 @@ function Router() {
       <Route path="/faq" component={FAQ} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsConditions} />
-      
-      {/* Admin Routes */}
+      <Route path="/compare" component={Compare} />
+      <Route path="/wishlist" component={Wishlist} />
+      <Route path="/kra-calculator" component={KRACalculator} />
+
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/cars" component={AdminCars} />
@@ -74,7 +101,7 @@ function Router() {
       <Route path="/admin/testimonials" component={AdminTestimonials} />
       <Route path="/admin/blog" component={AdminBlog} />
       <Route path="/admin/team" component={AdminTeam} />
-      <Route path="/admin/services" component={AdminSettings} /> {/* Services settings mapped to settings page or something similar for now, but there's a services page in public. Admin services missing? Ah we didn't implement AdminServices, let's map to a stub or I'll implement it */}
+      <Route path="/admin/services" component={AdminSettings} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route component={NotFound} />
     </Switch>
@@ -86,7 +113,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
+          <AppContexts>
+            <Router />
+          </AppContexts>
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
