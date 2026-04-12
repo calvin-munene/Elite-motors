@@ -12,3 +12,4 @@ export * from "./financing";
 export * from "./conversations";
 export * from "./messages";
 export * from "./chatbot-knowledge";
+export * from "./newsletter";
