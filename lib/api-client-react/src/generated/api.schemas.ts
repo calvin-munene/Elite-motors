@@ -45,6 +45,13 @@ export interface Car {
   financingAvailable: boolean;
   location?: string | null;
   category?: string | null;
+  isJapaneseImport: boolean;
+  auctionGrade?: string | null;
+  chassisNumber?: string | null;
+  shippingStatus?: string | null;
+  japanDepartureDate?: string | null;
+  kenyaArrivalDate?: string | null;
+  viewCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,6 +90,12 @@ export interface CreateCarBody {
   financingAvailable?: boolean;
   location?: string | null;
   category?: string | null;
+  isJapaneseImport?: boolean;
+  auctionGrade?: string | null;
+  chassisNumber?: string | null;
+  shippingStatus?: string | null;
+  japanDepartureDate?: string | null;
+  kenyaArrivalDate?: string | null;
 }
 
 export interface CarStats {
@@ -240,7 +253,9 @@ export interface SiteSettings {
   email?: string | null;
   address?: string | null;
   city?: string | null;
+  country?: string | null;
   googleMapsUrl?: string | null;
+  googleMapsEmbedUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   twitterUrl?: string | null;
@@ -248,12 +263,28 @@ export interface SiteSettings {
   openingHours?: string | null;
   heroTitle?: string | null;
   heroSubtitle?: string | null;
+  heroImage?: string | null;
   aboutTitle?: string | null;
   aboutContent?: string | null;
   aboutImage?: string | null;
   yearsInBusiness?: number | null;
   carsInStock?: number | null;
   satisfiedClients?: number | null;
+  currency?: string | null;
+  usdToKesRate?: number | null;
+  inventoryTitle?: string | null;
+  inventorySubtitle?: string | null;
+  servicesTitle?: string | null;
+  servicesSubtitle?: string | null;
+  contactTitle?: string | null;
+  contactSubtitle?: string | null;
+  footerTagline?: string | null;
+  whatsappApiEnabled?: string | null;
+  whatsappApiToken?: string | null;
+  metaDescription?: string | null;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
+  primaryColor?: string | null;
 }
 
 export interface AdminUser {
@@ -335,6 +366,35 @@ export interface CreateFinancingInquiryBody {
   message?: string | null;
 }
 
+export interface OpenaiConversation {
+  id: number;
+  title: string;
+  createdAt: string;
+}
+
+export interface OpenaiMessage {
+  id: number;
+  conversationId: number;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreateOpenaiConversationBody {
+  title: string;
+}
+
+export interface SendOpenaiMessageBody {
+  content: string;
+}
+
+export interface OpenaiConversationWithMessages {
+  id: number;
+  title: string;
+  createdAt: string;
+  messages: OpenaiMessage[];
+}
+
 export type ListCarsParams = {
   make?: string;
   model?: string;
@@ -354,6 +414,7 @@ export type ListCarsParams = {
   limit?: number;
   offset?: number;
   search?: string;
+  japaneseImport?: boolean;
 };
 
 export type ListCarsSortBy =

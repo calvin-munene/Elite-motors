@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, numeric, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, numeric, timestamp, jsonb, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -38,6 +38,14 @@ export const carsTable = pgTable("cars", {
   financingAvailable: boolean("financing_available").notNull().default(true),
   location: text("location"),
   category: text("category"),
+  // Japanese Import Fields
+  isJapaneseImport: boolean("is_japanese_import").notNull().default(false),
+  auctionGrade: text("auction_grade"),
+  chassisNumber: text("chassis_number"),
+  shippingStatus: text("shipping_status").default("in_stock"),
+  japanDepartureDate: text("japan_departure_date"),
+  kenyaArrivalDate: text("kenya_arrival_date"),
+  viewCount: integer("view_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -26,4 +26,5 @@ export type ListCarsParams = {
   limit?: number;
   offset?: number;
   search?: string;
+  japaneseImport?: boolean;
 };

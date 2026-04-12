@@ -42,6 +42,13 @@ export interface Car {
   financingAvailable: boolean;
   location?: string | null;
   category?: string | null;
+  isJapaneseImport: boolean;
+  auctionGrade?: string | null;
+  chassisNumber?: string | null;
+  shippingStatus?: string | null;
+  japanDepartureDate?: string | null;
+  kenyaArrivalDate?: string | null;
+  viewCount: number;
   createdAt: string;
   updatedAt: string;
 }
