@@ -25,6 +25,7 @@ import negotiateRouter from "./negotiate";
 import recommendationsRouter from "./recommendations";
 import whatsappCloudRouter from "./whatsapp-cloud";
 import japanAuctionsRouter from "./japan-auctions";
+import storageRouter from "./storage";
 
 const router: IRouter = Router();
 
@@ -54,5 +55,6 @@ router.use(negotiateRouter);
 router.use(recommendationsRouter);
 router.use(whatsappCloudRouter);
 router.use(japanAuctionsRouter);
+router.use(storageRouter);
 
 export default router;

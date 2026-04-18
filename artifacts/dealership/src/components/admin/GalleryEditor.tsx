@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Camera, Link2, Loader2 } from "lucide-react";
+import { uploadFile } from "@/lib/uploadFile";
+import { useToast } from "@/hooks/use-toast";
 
 interface GalleryEditorProps {
   value: string[];
@@ -10,12 +12,46 @@ interface GalleryEditorProps {
 
 export function GalleryEditor({ value, onChange }: GalleryEditorProps) {
   const [newUrl, setNewUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   const images = value || [];
 
-  const addImage = () => {
+  const addImageUrl = () => {
     if (newUrl.trim()) {
       onChange([...images, newUrl.trim()]);
       setNewUrl("");
+    }
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    const uploaded: string[] = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        if (!f.type.startsWith("image/")) {
+          toast({ title: `Skipped ${f.name}`, description: "Not an image file", variant: "destructive" });
+          continue;
+        }
+        setProgress(0);
+        const url = await uploadFile(f, setProgress);
+        uploaded.push(url);
+      }
+      if (uploaded.length) {
+        onChange([...images, ...uploaded]);
+        toast({ title: `Uploaded ${uploaded.length} photo${uploaded.length === 1 ? "" : "s"}` });
+      }
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e?.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      setProgress(0);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
   };
 
@@ -56,20 +92,65 @@ export function GalleryEditor({ value, onChange }: GalleryEditorProps) {
           ))}
         </div>
       )}
-      <div className="flex gap-2">
-        <Input
-          value={newUrl}
-          onChange={(e) => setNewUrl(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImage(); } }}
-          placeholder="Paste image URL and press Add..."
-          className="bg-background border-white/10 text-white flex-1"
+
+      {/* Upload buttons */}
+      <div className="flex flex-wrap gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
         />
-        <Button type="button" variant="outline" onClick={addImage} className="border-white/10">
-          <Plus className="w-4 h-4 mr-1" /> Add Photo
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="border-white/10"
+        >
+          {uploading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
+          {uploading ? `Uploading ${progress}%` : "Upload from device"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => cameraInputRef.current?.click()}
+          disabled={uploading}
+          className="border-white/10"
+        >
+          <Camera className="w-4 h-4 mr-1" /> Take photo
         </Button>
       </div>
+
+      {/* URL fallback */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Link2 className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Input
+            value={newUrl}
+            onChange={(e) => setNewUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImageUrl(); } }}
+            placeholder="...or paste an image URL"
+            className="bg-background border-white/10 text-white pl-9"
+          />
+        </div>
+        <Button type="button" variant="outline" onClick={addImageUrl} className="border-white/10">
+          <Plus className="w-4 h-4 mr-1" /> Add URL
+        </Button>
+      </div>
+
       {images.length === 0 && (
-        <p className="text-xs text-gray-500">No photos added yet. Add image URLs above to populate the gallery.</p>
+        <p className="text-xs text-gray-500">No photos yet. Upload from your device, take one with the camera, or paste an image URL.</p>
       )}
     </div>
   );

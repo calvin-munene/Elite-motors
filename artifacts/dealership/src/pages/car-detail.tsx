@@ -233,7 +233,8 @@ export default function CarDetail() {
 
   const { addRecentCar } = useRecentlyViewed();
   const [activeImage, setActiveImage] = useState(0);
-  const [view360, setView360] = useState(false);
+  const [viewMode, setViewMode] = useState<"gallery" | "360" | "video">("gallery");
+  const view360 = viewMode === "360";
   const [showNegotiator, setShowNegotiator] = useState(false);
 
   useEffect(() => {
@@ -314,24 +315,42 @@ export default function CarDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Left: Gallery & Details */}
             <div className="lg:col-span-2 space-y-10">
-              {/* Gallery / 360 toggle */}
+              {/* Gallery / 360 / Video toggle */}
               <div className="space-y-4">
                 <div className="flex gap-2 mb-2">
                   <button
-                    onClick={() => setView360(false)}
-                    className={`text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-sm transition-colors ${!view360 ? "bg-primary text-white" : "bg-white/5 text-gray-400 hover:text-white"}`}
+                    onClick={() => setViewMode("gallery")}
+                    className={`text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-sm transition-colors ${viewMode === "gallery" ? "bg-primary text-white" : "bg-white/5 text-gray-400 hover:text-white"}`}
                   >
                     Gallery
                   </button>
                   <button
-                    onClick={() => setView360(true)}
-                    className={`text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-sm transition-colors flex items-center gap-1.5 ${view360 ? "bg-primary text-white" : "bg-white/5 text-gray-400 hover:text-white"}`}
+                    onClick={() => setViewMode("360")}
+                    className={`text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-sm transition-colors flex items-center gap-1.5 ${viewMode === "360" ? "bg-primary text-white" : "bg-white/5 text-gray-400 hover:text-white"}`}
                   >
                     360° View
                   </button>
+                  {(car as any).videoUrl && (
+                    <button
+                      onClick={() => setViewMode("video")}
+                      className={`text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-sm transition-colors flex items-center gap-1.5 ${viewMode === "video" ? "bg-primary text-white" : "bg-white/5 text-gray-400 hover:text-white"}`}
+                    >
+                      ▶ Video
+                    </button>
+                  )}
                 </div>
 
-                {view360 ? (
+                {viewMode === "video" && (car as any).videoUrl ? (
+                  <div className="aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-black">
+                    <video
+                      src={(car as any).videoUrl}
+                      controls
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                ) : view360 ? (
                   <Car360Viewer images={images} title={car.title} />
                 ) : (
                   <>

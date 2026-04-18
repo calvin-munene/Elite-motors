@@ -12,8 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useEffect } from "react";
-import { Image } from "lucide-react";
+import { Image, Video } from "lucide-react";
 import { GalleryEditor } from "@/components/admin/GalleryEditor";
+import { VideoUploader } from "@/components/admin/VideoUploader";
 
 const formSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -33,6 +34,7 @@ const formSchema = z.object({
   isFeatured: z.boolean().default(false),
   isPublished: z.boolean().default(true),
   gallery: z.array(z.string()).optional(),
+  videoUrl: z.string().optional(),
 });
 
 export default function AdminEditCar() {
@@ -66,6 +68,7 @@ export default function AdminEditCar() {
       isFeatured: false,
       isPublished: true,
       gallery: [],
+      videoUrl: "",
     },
   });
 
@@ -89,6 +92,7 @@ export default function AdminEditCar() {
         isFeatured: car.isFeatured,
         isPublished: car.isPublished,
         gallery: car.gallery || [],
+        videoUrl: (car as any).videoUrl || "",
       });
     }
   }, [car, form]);
@@ -295,6 +299,16 @@ export default function AdminEditCar() {
                   <Image className="w-4 h-4" /> Vehicle Photos (Gallery)
                 </FormLabel>
                 <GalleryEditor value={field.value || []} onChange={field.onChange} />
+              </FormItem>
+            )} />
+
+            {/* Vehicle Video */}
+            <FormField control={form.control} name="videoUrl" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs uppercase tracking-wider text-gray-400 font-bold flex items-center gap-2">
+                  <Video className="w-4 h-4" /> Walk-around / 360° Video
+                </FormLabel>
+                <VideoUploader value={field.value || ""} onChange={field.onChange} />
               </FormItem>
             )} />
 
