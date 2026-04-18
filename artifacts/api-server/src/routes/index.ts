@@ -13,6 +13,18 @@ import tradeInsRouter from "./trade-ins";
 import financingRouter from "./financing";
 import openaiRouter from "./openai/index";
 import newsletterRouter from "./newsletter";
+import trackRouter from "./track";
+import analyticsRouter from "./analytics";
+import customersRouter from "./customers";
+import notificationsRouter from "./notifications";
+import auditRouter from "./audit";
+import adminUsersRouter from "./admin-users";
+import visualSearchRouter from "./visual-search";
+import voiceListingRouter from "./voice-listing";
+import negotiateRouter from "./negotiate";
+import recommendationsRouter from "./recommendations";
+import whatsappCloudRouter from "./whatsapp-cloud";
+import japanAuctionsRouter from "./japan-auctions";
 
 const router: IRouter = Router();
 
@@ -30,5 +42,17 @@ router.use(tradeInsRouter);
 router.use(financingRouter);
 router.use(openaiRouter);
 router.use(newsletterRouter);
+router.use(trackRouter);
+router.use(analyticsRouter);
+router.use(customersRouter);
+router.use(notificationsRouter);
+router.use(auditRouter);
+router.use(adminUsersRouter);
+router.use(visualSearchRouter);
+router.use(voiceListingRouter);
+router.use(negotiateRouter);
+router.use(recommendationsRouter);
+router.use(whatsappCloudRouter);
+router.use(japanAuctionsRouter);
 
 export default router;

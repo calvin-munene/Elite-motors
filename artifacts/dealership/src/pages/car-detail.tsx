@@ -16,7 +16,8 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useRecentlyViewed } from "@/contexts/RecentlyViewedContext";
-import { Scale, Heart } from "lucide-react";
+import { Scale, Heart, Handshake } from "lucide-react";
+import { NegotiationModal } from "@/components/NegotiationModal";
 
 const IMPORT_STEPS = [
   { key: "at_auction", label: "At Auction in Japan", desc: "Vehicle listed at Japanese auction" },
@@ -233,6 +234,7 @@ export default function CarDetail() {
   const { addRecentCar } = useRecentlyViewed();
   const [activeImage, setActiveImage] = useState(0);
   const [view360, setView360] = useState(false);
+  const [showNegotiator, setShowNegotiator] = useState(false);
 
   useEffect(() => {
     if (car) addRecentCar(car);
@@ -535,6 +537,12 @@ export default function CarDetail() {
                     </Button>
                   </Link>
 
+                  {/* AI Negotiation */}
+                  <Button onClick={() => setShowNegotiator(true)} disabled={car.availability !== "available"}
+                    className="w-full h-11 text-xs font-bold uppercase tracking-wider rounded-sm bg-amber-600 hover:bg-amber-700 text-white border-none">
+                    <Handshake className="w-4 h-4 mr-2" /> Negotiate Price (AI)
+                  </Button>
+
                   {/* Chat with Sales Rep */}
                   <a
                     href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Hi! I'm interested in the ${car.year} ${car.title} priced at ${formatPrice(car.price)}. Can a sales rep assist me with more details?`}
@@ -603,6 +611,7 @@ export default function CarDetail() {
 
       <Footer />
       <FloatingWhatsApp />
+      {showNegotiator && <NegotiationModal car={car} onClose={() => setShowNegotiator(false)} />}
     </div>
   );
 }

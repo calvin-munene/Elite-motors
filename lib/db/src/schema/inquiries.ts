@@ -13,6 +13,9 @@ export const inquiriesTable = pgTable("inquiries", {
   type: text("type").notNull().default("general"),
   status: text("status").notNull().default("new"),
   notes: text("notes"),
+  assignedAdminId: integer("assigned_admin_id"),
+  leadScore: integer("lead_score").default(50),
+  leadLevel: text("lead_level").default("warm"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

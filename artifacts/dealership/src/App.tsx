@@ -13,6 +13,7 @@ import { RecentlyViewedProvider } from "@/contexts/RecentlyViewedContext";
 import { useGetSettings } from "@workspace/api-client-react";
 import { AIChatbot } from "@/components/AIChatbot";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
+import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 
 import Home from "@/pages/index";
 import About from "@/pages/about";
@@ -34,6 +35,7 @@ import TermsConditions from "@/pages/terms";
 import Compare from "@/pages/compare";
 import Wishlist from "@/pages/wishlist";
 import KRACalculator from "@/pages/kra-calculator";
+import VisualSearch from "@/pages/visual-search";
 
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/index";
@@ -49,6 +51,13 @@ import AdminBlog from "@/pages/admin/blog/index";
 import AdminTeam from "@/pages/admin/team/index";
 import AdminSettings from "@/pages/admin/settings/index";
 import AdminChatbotKnowledge from "@/pages/admin/chatbot/index";
+import AdminAnalytics from "@/pages/admin/analytics/index";
+import AdminVisitors from "@/pages/admin/visitors/index";
+import AdminCustomers from "@/pages/admin/customers/index";
+import AdminCalendar from "@/pages/admin/calendar/index";
+import AdminAudit from "@/pages/admin/audit/index";
+import AdminUsers from "@/pages/admin/users/index";
+import AdminJapanAuctions from "@/pages/admin/japan-auctions/index";
 
 import "@/lib/api-setup";
 
@@ -56,9 +65,12 @@ const queryClient = new QueryClient();
 
 function ScrollToTop() {
   const [location] = useLocation();
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [location]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [location]);
+  return null;
+}
+
+function VisitorTracker() {
+  useVisitorTracking();
   return null;
 }
 
@@ -87,6 +99,7 @@ function Router() {
   return (
     <>
       <ScrollToTop />
+      <VisitorTracker />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/about" component={About} />
@@ -108,9 +121,14 @@ function Router() {
         <Route path="/compare" component={Compare} />
         <Route path="/wishlist" component={Wishlist} />
         <Route path="/kra-calculator" component={KRACalculator} />
+        <Route path="/visual-search" component={VisualSearch} />
 
         <Route path="/admin/login" component={AdminLogin} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/analytics" component={AdminAnalytics} />
+        <Route path="/admin/visitors" component={AdminVisitors} />
+        <Route path="/admin/customers" component={AdminCustomers} />
+        <Route path="/admin/calendar" component={AdminCalendar} />
         <Route path="/admin/cars" component={AdminCars} />
         <Route path="/admin/cars/new" component={AdminNewCar} />
         <Route path="/admin/cars/:id/edit" component={AdminEditCar} />
@@ -124,6 +142,9 @@ function Router() {
         <Route path="/admin/services" component={AdminSettings} />
         <Route path="/admin/settings" component={AdminSettings} />
         <Route path="/admin/chatbot" component={AdminChatbotKnowledge} />
+        <Route path="/admin/audit" component={AdminAudit} />
+        <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/japan-auctions" component={AdminJapanAuctions} />
         <Route component={NotFound} />
       </Switch>
       {!isAdmin && <AIChatbot />}

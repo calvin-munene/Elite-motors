@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { bookingsTable } from "@workspace/db";
+import { bookingsTable, carsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { scoreLead } from "../lib/lead-scoring";
+import { createNotification } from "../lib/notifications";
 
 const router = Router();
 
@@ -26,7 +28,32 @@ router.get("/bookings", async (req, res) => {
 
 router.post("/bookings", async (req, res) => {
   try {
-    const result = await db.insert(bookingsTable).values(req.body).returning();
+    let carPrice: number | null = null;
+    if (req.body.carId) {
+      const cars = await db.select().from(carsTable).where(eq(carsTable.id, Number(req.body.carId)));
+      if (cars[0]) carPrice = Number(cars[0].price);
+    }
+
+    const score = scoreLead({
+      name: req.body.name, email: req.body.email, phone: req.body.phone,
+      message: req.body.message, carPrice, hasCarSelected: !!req.body.carId,
+      preferredDate: req.body.preferredDate,
+    });
+
+    const result = await db.insert(bookingsTable).values({
+      ...req.body,
+      leadScore: score.score,
+      leadLevel: score.level,
+    }).returning();
+
+    await createNotification({
+      type: "booking",
+      title: score.level === "hot" ? "🔥 HOT Test Drive Booking" : `New Test Drive Booking`,
+      message: `${req.body.name} booked${req.body.carTitle ? ` ${req.body.carTitle}` : " a test drive"} (Lead score: ${score.score})`,
+      link: "/admin/bookings",
+      priority: score.level === "hot" ? "urgent" : "normal",
+    });
+
     res.status(201).json(formatBooking(result[0]));
   } catch (err) {
     req.log.error({ err }, "Error creating booking");
