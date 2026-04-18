@@ -4,7 +4,7 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: "npm install -g pnpm && pnpm install --frozen-lockfile && pnpm db:push && pnpm build"
+    buildCommand: "npm install -g pnpm && pnpm install --frozen-lockfile && pnpm db:push && pnpm db:seed-if-empty && pnpm build"
     startCommand: "pnpm start"
     envVars:
       - key: NODE_ENV
