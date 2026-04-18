@@ -40,10 +40,18 @@ app.use("/api", router);
 if (process.env.NODE_ENV === "production") {
   // Path from dist/index.mjs → up to api-server → up to artifacts → dealership/dist/public
   const staticPath = path.resolve(__dirname, "../../dealership/dist/public");
+  const indexHtmlPath = path.join(staticPath, "index.html");
+
   app.use(express.static(staticPath));
-  // Catch-all: send index.html for React client-side routing
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
+
+  // SPA fallback: any non-API request that didn't match a static file
+  // returns index.html so React Router can handle the route client-side.
+  // Using app.use (middleware) instead of app.get("*") because Express 5
+  // with path-to-regexp v8 no longer accepts the bare "*" wildcard.
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    if (req.path.startsWith("/api/")) return next();
+    res.sendFile(indexHtmlPath);
   });
 }
 
