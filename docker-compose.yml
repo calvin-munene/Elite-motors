@@ -36,7 +36,7 @@ services:
       WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-}
     ports:
       - "8080:8080"
-    command: sh -c "pnpm db:push && pnpm db:seed-if-empty && pnpm start"
+    command: sh -c "pnpm db:push-force && pnpm db:seed-if-empty && pnpm start"
 
 volumes:
   autoelite_db:

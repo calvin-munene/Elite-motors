@@ -4,8 +4,14 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: "npm install -g pnpm && pnpm install --frozen-lockfile && pnpm db:push && pnpm db:seed-if-empty && pnpm build"
-    startCommand: "pnpm start"
+    # DB sync (push + seed-if-empty) intentionally runs at startup, not during
+    # build. Render's build phase can race with the database availability and
+    # silently no-op `db:push` (leaving tables uncreated). Running them in the
+    # start command guarantees the schema and seed data exist before the
+    # server starts handling requests. The seed step is a no-op on subsequent
+    # boots because it skips when the cars table already has data.
+    buildCommand: "npm install -g pnpm && pnpm install --frozen-lockfile && pnpm build"
+    startCommand: "pnpm db:push-force && pnpm db:seed-if-empty && pnpm start"
     envVars:
       - key: NODE_ENV
         value: production
