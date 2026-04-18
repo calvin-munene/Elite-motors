@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { Globe, DollarSign, MapPin, Phone, Palette, Bot, Image, MessageSquare, LayoutGrid } from "lucide-react";
+import { Globe, DollarSign, MapPin, Phone, Palette, Bot, Image, MessageSquare, LayoutGrid, Database } from "lucide-react";
 
 const formSchema = z.object({
   dealerName: z.string().min(2),
@@ -459,6 +459,68 @@ export default function AdminSettings() {
           </div>
         </form>
       </Form>
+
+      <DemoDataSection />
     </AdminLayout>
+  );
+}
+
+function DemoDataSection() {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  async function handleSeed() {
+    if (!confirming) {
+      setConfirming(true);
+      setTimeout(() => setConfirming(false), 5000);
+      return;
+    }
+    setConfirming(false);
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("adminToken") || "";
+      const base = (import.meta as any).env?.BASE_URL || "/";
+      const res = await fetch(`${base}api/admin/seed-demo`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed");
+      toast({
+        title: "Demo content loaded",
+        description: `${data.carCount} cars are now live. Refresh the public site to see them.`,
+      });
+    } catch (e: any) {
+      toast({ title: "Failed to load demo data", description: e?.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="mt-12 max-w-4xl bg-card border border-amber-500/20 rounded-xl p-8">
+      <div className="flex items-center gap-3 border-b border-white/10 pb-3 mb-5">
+        <div className="w-8 h-8 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center justify-center">
+          <Database className="w-4 h-4 text-amber-400" />
+        </div>
+        <div>
+          <h3 className="font-serif text-lg font-bold text-white">Demo Inventory</h3>
+          <p className="text-xs text-gray-400">One-click load of 15 sample cars, 3 blog posts, 6 testimonials, 8 services & 4 team members.</p>
+        </div>
+      </div>
+      <div className="text-sm text-gray-300 mb-4 space-y-1">
+        <p>This <strong className="text-white">replaces</strong> existing cars, blog posts, testimonials, services, team members, and site settings with the demo dataset.</p>
+        <p className="text-emerald-400">Customer data (bookings, inquiries, trade-ins) is preserved.</p>
+      </div>
+      <Button
+        type="button"
+        onClick={handleSeed}
+        disabled={loading}
+        className={confirming ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"}
+      >
+        {loading ? "Loading..." : confirming ? "Click again to confirm" : "Load Demo Inventory"}
+      </Button>
+    </div>
   );
 }

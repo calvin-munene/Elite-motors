@@ -3,6 +3,8 @@ import { db } from "@workspace/db";
 import { adminUsersTable, inquiriesTable, bookingsTable, carsTable, tradeInsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import crypto from "crypto";
+import fs from "node:fs";
+import path from "node:path";
 
 const router = Router();
 
@@ -155,6 +157,46 @@ router.get("/admin/dashboard", requireAdmin, async (req: any, res) => {
   } catch (err) {
     req.log.error({ err }, "Error getting dashboard stats");
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+function findSeedSqlPath(): string | null {
+  let dir = process.cwd();
+  for (let i = 0; i < 6; i++) {
+    const candidate = path.join(dir, "scripts", "seed.sql");
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+router.post("/admin/seed-demo", requireAdmin, async (req: any, res) => {
+  try {
+    const seedPath = findSeedSqlPath();
+    if (!seedPath) {
+      return res.status(500).json({ error: "seed.sql not found on server" });
+    }
+    const sqlText = fs.readFileSync(seedPath, "utf8");
+    const { Pool } = await import("pg");
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    try {
+      await client.query(sqlText);
+    } finally {
+      client.release();
+      await pool.end();
+    }
+    const carCount = await db.select({ count: sql<number>`count(*)` }).from(carsTable);
+    res.json({
+      success: true,
+      message: "Demo content loaded. Customer data (bookings, inquiries) was preserved.",
+      carCount: Number(carCount[0]?.count ?? 0),
+    });
+  } catch (err: any) {
+    req.log.error({ err }, "Error loading demo data");
+    res.status(500).json({ error: err?.message || "Failed to load demo data" });
   }
 });
 
