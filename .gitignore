@@ -58,3 +58,12 @@ skills-lock.json
 artifacts/mockup-sandbox/
 push-to-github.sh
 attached_assets/
+
+# Scripts - only seed.sql is needed by buyers
+scripts/post-merge.sh
+scripts/src/
+scripts/tsconfig.json
+scripts/package.json
+
+# Duplicate raw integration source (proper packages are lib/integrations-openai-ai-*)
+lib/integrations/
