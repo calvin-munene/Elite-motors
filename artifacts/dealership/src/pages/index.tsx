@@ -7,6 +7,7 @@ import { TestimonialCard } from "@/components/TestimonialCard";
 import { BlogCard } from "@/components/BlogCard";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { useGetFeaturedCars, useListTestimonials, useListBlogPosts, useGetSettings } from "@workspace/api-client-react";
+import { RecommendedForYou } from "@/components/RecommendedForYou";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, BadgeDollarSign, HeadphonesIcon, Settings } from "lucide-react";
@@ -205,6 +206,7 @@ export default function Home() {
             </div>
           </section>
         )}
+        <RecommendedForYou />
       </main>
 
       <Footer />

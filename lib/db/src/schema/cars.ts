@@ -46,6 +46,8 @@ export const carsTable = pgTable("cars", {
   japanDepartureDate: text("japan_departure_date"),
   kenyaArrivalDate: text("kenya_arrival_date"),
   viewCount: integer("view_count").notNull().default(0),
+  priceFloor: numeric("price_floor", { precision: 12, scale: 2 }),
+  costPrice: numeric("cost_price", { precision: 12, scale: 2 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

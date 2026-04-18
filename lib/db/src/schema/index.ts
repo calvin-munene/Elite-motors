@@ -13,3 +13,7 @@ export * from "./conversations";
 export * from "./messages";
 export * from "./chatbot-knowledge";
 export * from "./newsletter";
+export * from "./visitors";
+export * from "./audit-logs";
+export * from "./notifications";
+export * from "./negotiations";
