@@ -1,9 +1,12 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import path from "path";
+import { fileURLToPath } from "url";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app: Express = express();
 
 app.use(
@@ -25,10 +28,23 @@ app.use(
     },
   }),
 );
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
+app.use(cors());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// API routes
 app.use("/api", router);
+
+// Serve built React frontend in production
+if (process.env.NODE_ENV === "production") {
+  // Path from dist/index.mjs → up to api-server → up to artifacts → dealership/dist/public
+  const staticPath = path.resolve(__dirname, "../../dealership/dist/public");
+  app.use(express.static(staticPath));
+  // Catch-all: send index.html for React client-side routing
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(staticPath, "index.html"));
+  });
+}
 
 export default app;

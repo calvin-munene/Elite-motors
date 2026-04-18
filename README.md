@@ -2,16 +2,30 @@
 
 A premium car dealership website for the Kenyan market — built with React, Express, PostgreSQL, and AI-powered features.
 
-**Live demo features:** dark luxury theme · KES currency · admin dashboard · AI chatbot · visual search · price negotiation · WhatsApp integration · lead scoring · analytics · RBAC · audit log · visitor tracking · Japan auctions sync · KRA duty calculator · and more.
+**Live features:** dark luxury theme · KES currency · admin dashboard · AI chatbot · visual search · price negotiation · WhatsApp integration · lead scoring · analytics · RBAC · audit log · visitor tracking · Japan auctions sync · KRA duty calculator · and more.
 
 ---
 
 ## Tech Stack
 
-- **Frontend:** React 19 + Vite + TypeScript + Tailwind CSS + shadcn/ui + Wouter (routing) + TanStack Query
+- **Frontend:** React 19 + Vite + TypeScript + Tailwind CSS + shadcn/ui
 - **Backend:** Node.js + Express 5 + Drizzle ORM + PostgreSQL
 - **AI:** OpenAI (chat, vision, voice transcription)
 - **Monorepo:** pnpm workspaces
+
+---
+
+## How It Works (Architecture)
+
+In production, everything runs as **one single service**:
+
+```
+Browser → Express backend (Node.js)
+               ├── /api/*   → REST API (cars, bookings, AI, admin...)
+               └── /*       → Serves built React frontend (static files)
+```
+
+You only need **one server** and **one port**. No separate frontend/backend servers needed.
 
 ---
 
@@ -20,13 +34,18 @@ A premium car dealership website for the Kenyan market — built with React, Exp
 ```
 .
 ├── artifacts/
-│   ├── api-server/        # Express backend (REST API)
-│   ├── dealership/        # Customer + admin React frontend
-│   └── mockup-sandbox/    # Component preview workspace (dev only)
+│   ├── api-server/        # Express backend (REST API + serves frontend in prod)
+│   └── dealership/        # React frontend (customer site + admin dashboard)
 ├── lib/
-│   └── db/                # Drizzle schema & migrations
+│   ├── db/                # Drizzle ORM schema & database config
+│   ├── api-spec/          # OpenAPI specification
+│   ├── api-client-react/  # Auto-generated React query hooks
+│   ├── api-zod/           # Auto-generated TypeScript types & validators
+│   ├── integrations-openai-ai-react/   # OpenAI React hooks (voice)
+│   └── integrations-openai-ai-server/  # OpenAI server client (chat, vision)
 ├── scripts/
 │   └── seed.sql           # Initial data (cars, blog, settings, etc.)
+├── render.yaml            # One-click Render deployment config
 └── .env.example           # Environment variable template
 ```
 
@@ -36,84 +55,123 @@ A premium car dealership website for the Kenyan market — built with React, Exp
 
 ### Prerequisites
 - **Node.js 20+**
-- **pnpm 9+** — install with `npm install -g pnpm`
-- **PostgreSQL 14+** — local install or a free cloud DB ([Neon](https://neon.tech), [Supabase](https://supabase.com), [Railway](https://railway.app))
+- **pnpm 9+** — `npm install -g pnpm`
+- **PostgreSQL 14+** — local or free cloud ([Neon](https://neon.tech), [Supabase](https://supabase.com), [Railway](https://railway.app))
 
 ### 1. Clone and install
 ```bash
-git clone https://github.com/calvin-munene/Auto_Elite_Motors.git
-cd Auto_Elite_Motors
+git clone https://github.com/calvin-munene/Elite-motors.git
+cd Elite-motors
 pnpm install
 ```
 
 ### 2. Set environment variables
 ```bash
 cp .env.example .env
-# Open .env in your editor and fill in DATABASE_URL, SESSION_SECRET, OPENAI_API_KEY
+# Edit .env — fill in DATABASE_URL, SESSION_SECRET, OPENAI_API_KEY
 ```
 
-### 3. Create the database schema
+### 3. Create database tables
 ```bash
-pnpm --filter @workspace/db run push
+pnpm db:push
 ```
 
-### 4. Load seed data (cars, blog posts, settings, admin user)
+### 4. Load starter data
 ```bash
 psql "$DATABASE_URL" -f scripts/seed.sql
 ```
 
-### 5. Run the development servers
-Open three terminals:
+### 5. Run in development
 ```bash
-# Terminal 1 — API server (port 8080)
-pnpm --filter @workspace/api-server run dev
+# Terminal 1 — API server
+PORT=8080 pnpm --filter @workspace/api-server run dev
 
-# Terminal 2 — Dealership website
-pnpm --filter @workspace/dealership run dev
+# Terminal 2 — Frontend
+PORT=3000 BASE_PATH=/ pnpm --filter @workspace/dealership run dev
 ```
 
-Visit **http://localhost:5173** for the storefront and **http://localhost:5173/admin/login** for the admin dashboard.
+Visit **http://localhost:3000** for the storefront.
+Visit **http://localhost:3000/admin/login** for the admin panel.
 
-### Default admin login
-After loading the seed data, log in with:
-- **Email:** `admin@autoelite.co.ke`
-- **Password:** `admin123` *(change this immediately in `/admin/users`)*
+**Default admin login:**
+- Username: `admin`
+- Password: `admin123` *(change this immediately)*
 
 ---
 
 ## Deployment
 
-### Option A — Vercel + Neon (easiest, ~5 min)
+### Option A — Render (recommended, free tier available)
 
-1. Push this repo to your GitHub account.
-2. Go to [vercel.com](https://vercel.com) → **Import Project** → select the repo.
-3. In the project settings, add the environment variables from `.env.example`.
-4. Create a free PostgreSQL database at [neon.tech](https://neon.tech) and paste its connection string as `DATABASE_URL`.
-5. Deploy. Vercel auto-redeploys on every `git push`.
+**One-click deploy using the included `render.yaml`:**
 
-### Option B — Railway (one-click full-stack)
+1. Push this repo to your GitHub.
+2. Go to [render.com](https://render.com) → **New** → **Blueprint**.
+3. Connect your GitHub and select this repo.
+4. Render reads `render.yaml` and sets everything up automatically.
+5. Add your environment variables in the Render dashboard:
+   - `DATABASE_URL` — get a free PostgreSQL at [Neon](https://neon.tech)
+   - `OPENAI_API_KEY` — from [platform.openai.com](https://platform.openai.com)
+   - `SESSION_SECRET` — any random 32+ character string
 
-1. Sign up at [railway.app](https://railway.app).
-2. Click **New Project** → **Deploy from GitHub** → choose this repo.
-3. Add a PostgreSQL plugin — Railway auto-injects `DATABASE_URL`.
-4. Add the remaining environment variables.
-5. Deploy. Custom domain support included.
+**Or manually on Render:**
+1. New **Web Service** → connect GitHub repo
+2. **Build command:** `npm install -g pnpm && pnpm install && pnpm db:push && pnpm build`
+3. **Start command:** `pnpm start`
+4. **Environment:** Node
+5. Add env vars from `.env.example`
 
-### Option C — Self-hosted VPS (DigitalOcean, Hetzner, AWS, etc.)
+---
+
+### Option B — Railway
+
+1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub**.
+2. Select this repo.
+3. Add a **PostgreSQL** plugin (Railway injects `DATABASE_URL` automatically).
+4. Add remaining env vars from `.env.example`.
+5. Set **Start command:** `pnpm start`
+6. Set **Build command:** `pnpm install && pnpm db:push && pnpm build`
+
+---
+
+### Option C — VPS (DigitalOcean, Hetzner, AWS, etc.)
 
 ```bash
-# On your server:
-git clone https://github.com/calvin-munene/Auto_Elite_Motors.git
-cd Auto_Elite_Motors
+# Clone on your server
+git clone https://github.com/calvin-munene/Elite-motors.git
+cd Elite-motors
+
+# Install pnpm if needed
+npm install -g pnpm
+
+# Install dependencies
 pnpm install
-cp .env.example .env  # fill in production values
-pnpm --filter @workspace/db run push
+
+# Set environment variables
+cp .env.example .env
+nano .env  # fill in your values
+
+# Create database tables
+pnpm db:push
+
+# Load starter data
 psql "$DATABASE_URL" -f scripts/seed.sql
+
+# Build the project
 pnpm build
-pnpm --filter @workspace/api-server run start
+
+# Start the server
+pnpm start
 ```
 
-Use a process manager like **pm2** or **systemd** to keep it running, and **nginx** as a reverse proxy with SSL via Let's Encrypt.
+The site will be live on whatever port you set in `PORT`. Use **nginx** as a reverse proxy for your domain + SSL.
+
+**Keep it running with pm2:**
+```bash
+npm install -g pm2
+pm2 start "pnpm start" --name autoelite
+pm2 save && pm2 startup
+```
 
 ---
 
@@ -123,65 +181,45 @@ Use a process manager like **pm2** or **systemd** to keep it running, and **ngin
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `SESSION_SECRET` | Yes | 32+ char random string for cookie signing |
-| `PORT` | No | API server port (default: 8080) |
-| `NODE_ENV` | Yes (prod) | `development` or `production` |
+| `PORT` | Yes | Server port (Render/Railway set this automatically) |
+| `NODE_ENV` | Yes | Set to `production` when deploying |
 | `OPENAI_API_KEY` | Optional | Enables AI chatbot, visual search, negotiation, voice listings |
-| `WHATSAPP_PHONE_NUMBER_ID` | Optional | WhatsApp Cloud API phone ID |
-| `WHATSAPP_ACCESS_TOKEN` | Optional | WhatsApp Cloud API token |
-| `WHATSAPP_VERIFY_TOKEN` | Optional | WhatsApp webhook verify token |
-
----
-
-## Features
-
-### Customer-facing
-- Inventory browse, filter, compare, wishlist
-- Car detail with image gallery, 360° view, financing calculator
-- AI chatbot (multilingual)
-- Visual search ("Snap & Find") — upload a photo to find similar cars
-- AI price negotiation modal
-- "Recommended for you" personalized suggestions
-- Test drive booking, trade-in valuation, financing application
-- Blog, testimonials, team, services, FAQ, contact
-- KRA import duty calculator
-- WhatsApp floating button
-- Multi-language (EN / SW / 中文)
-- KES currency throughout
-
-### Admin dashboard
-- Analytics with funnel & charts (Recharts)
-- Live visitor tracking
-- Customer 360 view
-- Test drive calendar
-- Lead scoring (auto-assigned)
-- Notifications bell with polling
-- RBAC (owner / manager / sales)
-- Audit log
-- Inventory CRUD with voice-to-listing
-- Inquiries, bookings, trade-ins, financing pipeline
-- Blog, testimonials, team, services, settings management
-- AI chatbot knowledge training
-- Japan auctions sync
+| `WHATSAPP_PHONE_NUMBER_ID` | Optional | WhatsApp Cloud API |
+| `WHATSAPP_ACCESS_TOKEN` | Optional | WhatsApp Cloud API |
+| `WHATSAPP_VERIFY_TOKEN` | Optional | WhatsApp webhook |
+| `VITE_API_URL` | Optional | Only if frontend/backend are on separate domains |
 
 ---
 
 ## Useful Commands
 
 ```bash
-pnpm install                                     # Install all dependencies
-pnpm build                                       # Type-check and build everything
-pnpm --filter @workspace/db run push             # Sync schema to database
-pnpm --filter @workspace/db run push-force       # Force sync (data-loss possible)
-pnpm --filter @workspace/api-server run dev      # Run API server
-pnpm --filter @workspace/dealership run dev      # Run frontend
+pnpm install              # Install all dependencies
+pnpm build                # Build frontend + backend for production
+pnpm start                # Start production server (serves everything)
+pnpm db:push              # Sync database schema
+pnpm db:push-force        # Force sync (caution: may affect data)
+
+# Development (run in separate terminals)
+PORT=8080 pnpm --filter @workspace/api-server run dev
+PORT=3000 BASE_PATH=/ pnpm --filter @workspace/dealership run dev
 ```
+
+---
+
+## Features
+
+### Customer-facing
+Inventory browse, filter, compare, wishlist · Car detail with gallery + 360° view · Financing calculator · AI chatbot (multilingual) · Visual search (upload a photo → find similar cars) · AI price negotiation · Personalized recommendations · Test drive booking · Trade-in valuation · Financing application · Blog · Testimonials · Team · Services · FAQ · Contact · KRA import duty calculator · WhatsApp button · Multi-language (EN / SW / 中文) · KES pricing
+
+### Admin dashboard
+Analytics with charts · Live visitor tracking · Customer 360 view · Test drive calendar · Lead scoring · Notification bell · RBAC (owner / manager / sales) · Audit log · Inventory CRUD + voice-to-listing · Inquiries / bookings / trade-ins / financing pipeline · Blog / testimonials / team / services / settings management · AI chatbot knowledge training · Japan auctions sync
 
 ---
 
 ## Support
 
-For deployment questions, open an issue at:
-https://github.com/calvin-munene/Auto_Elite_Motors/issues
+Open an issue at: https://github.com/calvin-munene/Elite-motors/issues
 
 ---
 
