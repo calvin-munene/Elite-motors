@@ -26,6 +26,13 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
     return;
   }
 
+  if (!process.env.PRIVATE_OBJECT_DIR || !process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID) {
+    res.status(503).json({
+      error: "File uploads are not configured on this server. Use the 'Add image URL' option to paste a hosted image URL instead. (To enable device uploads, configure object storage env vars: DEFAULT_OBJECT_STORAGE_BUCKET_ID, PRIVATE_OBJECT_DIR, PUBLIC_OBJECT_SEARCH_PATHS.)",
+    });
+    return;
+  }
+
   try {
     const { name, size, contentType } = parsed.data;
 
@@ -37,9 +44,11 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
       objectPath,
       metadata: { name, size, contentType },
     });
-  } catch (error) {
+  } catch (error: any) {
     req.log.error({ err: error }, "Error generating upload URL");
-    res.status(500).json({ error: "Failed to generate upload URL" });
+    res.status(500).json({
+      error: `Failed to generate upload URL: ${error?.message || "unknown error"}. Use the 'Add image URL' option to paste a hosted image URL instead.`,
+    });
   }
 });
 
