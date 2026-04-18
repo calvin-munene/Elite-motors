@@ -1,33 +1,39 @@
+-- ============================================================================
+-- AutoElite Motors — Seed Data
+-- ============================================================================
+-- This file populates a fresh database with the SAME content as the live demo:
+--   • 15 cars (with images, specs, prices in KES)
+--   • 3 blog posts
+--   • 6 customer testimonials
+--   • 8 services
+--   • 4 team members
+--   • Site settings (branding, contact, hours)
+--   • Chatbot knowledge base
+--   • Default admin user (username: admin, password: admin123)
 --
--- PostgreSQL database dump
+-- USAGE:
+--   psql "$DATABASE_URL" -f scripts/seed.sql
 --
-
-\restrict XmcHBkgx8Y0ce7O4caSSA4bNXZ0fauCkIGZe3Brhd2cVGC1DCwbzy6S9rQgggks
-
--- Dumped from database version 16.10
--- Dumped by pg_dump version 16.10
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
+-- Or paste the entire contents into Neon/Supabase SQL editor and click Run.
 --
--- Data for Name: admin_users; Type: TABLE DATA; Schema: public; Owner: -
---
+-- This script is IDEMPOTENT — safe to re-run; it wipes & repopulates content
+-- tables. It does NOT touch customer data (bookings, inquiries, etc.).
+-- ============================================================================
 
-INSERT INTO public.admin_users VALUES (1, 'admin', 'c65852e7b6466c4e7d83e74ab427cf2b549ab1cd05a46fe860c375c9139c6852', 'Administrator', '2026-04-12 11:03:31.557035', NULL, 'owner', 'true', NULL);
+BEGIN;
+
+-- Clear existing content (preserves customer/transactional tables)
+TRUNCATE TABLE
+  cars, blog_posts, testimonials, services, team_members,
+  site_settings, chatbot_knowledge, admin_users
+RESTART IDENTITY CASCADE;
+
+-- ============================================================================
+-- Content data (dumped from live database)
+-- ============================================================================
 
 
---
 -- Data for Name: blog_posts; Type: TABLE DATA; Schema: public; Owner: -
---
 
 INSERT INTO public.blog_posts VALUES (1, 'top-luxury-suvs-2023', 'Top 5 Luxury SUVs of 2023: The Ultimate Guide', 'The luxury SUV market has never been more competitive. We break down the top contenders and help you decide which one is right for you.', 'The luxury SUV segment has evolved dramatically over the past decade. Today''s premium SUVs offer performance, technology, and comfort that would have seemed impossible just a few years ago. In this comprehensive guide, we examine the five best luxury SUVs available in 2023, from the supremely capable Range Rover Sport to the technologically brilliant Mercedes GLE.
 
@@ -40,15 +46,7 @@ INSERT INTO public.blog_posts VALUES (3, 'new-arrivals-november-2023', 'November
 This month standout addition is undoubtedly the 2022 Audi RS6 Avant in Nardo Grey with just 9,000 miles on the clock. With the full Carbon Black exterior package and Bang & Olufsen 3D sound system, this is arguably the finest RS6 Avant we have ever stocked.', 'latest-arrivals', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800', true, '2023-11-10 00:00:00', '2026-04-12 11:09:50.931834');
 
 
---
--- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: -
---
-
-
-
---
 -- Data for Name: cars; Type: TABLE DATA; Schema: public; Owner: -
---
 
 INSERT INTO public.cars VALUES (1, '2023-mercedes-benz-gle-350', 'Mercedes-Benz GLE 350', 'Mercedes-Benz', 'GLE', '350', 2023, 89500.00, NULL, 12000, '2.0L Turbo', 'Automatic', 'Petrol', 'AWD', 'SUV', 5, 4, 'Obsidian Black', 'AE-2023-001', NULL, 'new', 'available', 'Stunning luxury SUV in pristine condition with full service history', 'Experience the pinnacle of luxury SUV driving with this immaculate 2023 Mercedes-Benz GLE 350. Wrapped in Obsidian Black with a Macchiato Beige interior, this vehicle combines breathtaking style with cutting-edge technology and supreme comfort.', '["Panoramic Sunroof", "Burmester Sound System", "Heated Seats", "Wireless Charging", "360 Camera", "Active Parking Assist", "Air Suspension"]', '["Active Brake Assist", "Blind Spot Assist", "Lane Keeping Assist", "Adaptive Cruise Control", "Traffic Sign Recognition"]', '["MBUX Infotainment", "Apple CarPlay", "Heated & Ventilated Seats", "Dual Zone Climate", "Electric Tailgate"]', '["12.3 inch Display", "MBUX Voice Control", "Wireless CarPlay", "Heads Up Display", "Digital Instrument Cluster"]', '["https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800", "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800", "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800", "https://images.unsplash.com/photo-1563720223185-11003d516935?w=800"]', NULL, true, true, true, 'Los Angeles, CA', 'Luxury', '2026-04-12 11:09:50.906473', '2026-04-12 11:09:50.906473', false, NULL, NULL, 'in_stock', NULL, NULL, 0, NULL, NULL);
 INSERT INTO public.cars VALUES (2, '2022-bmw-x5-m50i', 'BMW X5 M50i', 'BMW', 'X5', 'M50i', 2022, 95000.00, NULL, 18500, '4.4L V8 Twin Turbo', 'Automatic', 'Petrol', 'xDrive AWD', 'SUV', 5, 4, 'Mineral White', 'AE-2022-002', NULL, 'used', 'available', 'High-performance luxury SUV with M Sport package, low mileage', 'This remarkable BMW X5 M50i represents the perfect fusion of performance and luxury. With its 523hp twin-turbocharged V8 engine, this SUV delivers supercar-level performance while maintaining the versatility and comfort expected of a premium family vehicle.', '["M Sport Package", "BMW Individual", "Laser Headlights", "Panoramic Sky Lounge", "Bowers & Wilkins Sound", "Active Steering"]', '["Automatic Emergency Braking", "Pedestrian Detection", "Rear Collision Warning", "Lane Departure Warning", "Head-Up Display"]', '["Massage Seats", "4-Zone Climate", "Ambient Lighting", "Wireless Charging", "Executive Package"]', '["BMW Live Cockpit Pro", "5G Ready", "Amazon Alexa Integration", "Gesture Control", "Wireless CarPlay"]', '["https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800", "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800", "https://images.unsplash.com/photo-1617531653332-bd46c16f4d5f?w=800"]', NULL, true, true, true, 'Beverly Hills, CA', 'Luxury', '2026-04-12 11:09:50.906473', '2026-04-12 11:09:50.906473', false, NULL, NULL, 'in_stock', NULL, NULL, 0, NULL, NULL);
@@ -67,9 +65,7 @@ INSERT INTO public.cars VALUES (14, '2018-honda-stepwgn-spada', '2018 Honda Step
 INSERT INTO public.cars VALUES (15, '2022-toyota-harrier-z', '2022 Toyota Harrier Z', 'Toyota', 'Harrier', 'Z Leather Package', 2022, 45000.00, NULL, 15000, '2.0L Dynamic Force', 'CVT', 'Petrol', 'FWD', 'SUV', 5, 5, 'Emotional Red', NULL, NULL, 'used', 'in_transit', 'Grade 5 Toyota Harrier Z in rare Emotional Red. Arriving April 2025.', 'The 4th generation Toyota Harrier Z in exclusive Emotional Red. Grade 5 with panoramic glass roof, JBL audio, digital rear mirror.', NULL, '["Toyota Safety Sense 2.0", "Pre-Collision System", "Radar Cruise", "Lane Tracing Assist"]', '["Panoramic Glass Roof", "Digital Rear Mirror", "JBL 9-Speaker", "Wireless CarPlay", "Heated Seats"]', NULL, '["https://images.unsplash.com/photo-1617469767786-9164a0f97d14?w=1200", "https://images.unsplash.com/photo-1580414057403-c5f451f30e1c?w=1200"]', NULL, true, true, true, 'In Transit — ETA April 2025', NULL, '2026-04-12 12:25:47.381012', '2026-04-12 12:25:47.381012', true, '5', 'MXUA80-0045123', 'in_transit', '2025-02-20', '2025-04-05', 0, NULL, NULL);
 
 
---
 -- Data for Name: chatbot_knowledge; Type: TABLE DATA; Schema: public; Owner: -
---
 
 INSERT INTO public.chatbot_knowledge VALUES (1, 'I want to talk to owner', 'Habari! Karibu. To speak with the **owner/management** at **AutoElite Motors**, please use either of these:
 
@@ -89,193 +85,7 @@ To get you connected to the **owner/management**, please send this message on **
 Tell me what it’s about (e.g., **car inquiry, financing, complaint, partnership**) and I’ll help you phrase it vizuri.', '["name","john"]', 'openai', 0, '2026-04-18 14:24:05.49265', '2026-04-18 14:24:05.49265');
 
 
---
--- Data for Name: conversations; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.conversations VALUES (1, 'Car Advice Chat', '2026-04-12 13:19:07.381263+00');
-INSERT INTO public.conversations VALUES (2, 'Car Advice Chat', '2026-04-12 14:01:40.629242+00');
-INSERT INTO public.conversations VALUES (3, 'Car Advice Chat', '2026-04-12 14:35:06.615502+00');
-INSERT INTO public.conversations VALUES (4, 'Car Advice Chat', '2026-04-18 14:23:39.212829+00');
-
-
---
--- Data for Name: financing_inquiries; Type: TABLE DATA; Schema: public; Owner: -
---
-
-
-
---
--- Data for Name: inquiries; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.inquiries VALUES (1, 'John kamau', '+254740652716', 'customer@example.com', NULL, NULL, 'Mazda cx5 price here in kenya', 'general', 'read', NULL, '2026-04-12 14:38:46.921908', NULL, 50, 'warm');
-INSERT INTO public.inquiries VALUES (2, 'John', '0741076845 ', NULL, 5, '2022 Audi RS6 Avant', '🤝 NEGOTIATED DEAL: Customer accepted KES 15,600,000 via AI negotiator. Please follow up within 1 hour.', 'negotiation', 'new', NULL, '2026-04-18 14:31:49.12544', NULL, 95, 'hot');
-
-
---
--- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.messages VALUES (1, 1, 'user', 'What is a car', '2026-04-12 13:19:07.997791+00');
-INSERT INTO public.messages VALUES (2, 1, 'assistant', 'A car is a motor vehicle designed mainly to carry people on roads. Most cars have:
-
-- **4 wheels** (some have 3), **seats for 2–7 people**
-- An **engine or electric motor** that provides power
-- A **transmission** that sends power to the wheels
-- **Steering, brakes, suspension**, and safety systems (seatbelts, airbags)
-
-Common car types include **sedans**, **hatchbacks**, **SUVs**, **wagons**, **pickups**, and **sports cars**.', '2026-04-12 13:19:10.93997+00');
-INSERT INTO public.messages VALUES (3, 1, 'user', 'Tell me more about honda', '2026-04-12 13:19:33.798915+00');
-INSERT INTO public.messages VALUES (4, 1, 'assistant', 'Honda is a major Japanese automaker known for building **reliable, fuel-efficient cars** and **very durable engines**. In Kenya, Honda is popular because it’s generally **cheaper to run than many European brands**, and many models come as **Japanese imports (JDM)**.
-
-### What Honda is best known for
-- **Reliability:** Engines and gearboxes often last long with basic maintenance.
-- **Fuel economy:** Many Honda small cars (Fit/Jazz, Vezel) are very economical.
-- **Driving feel:** Hondas usually handle well and feel “tight” compared to some rivals.
-- **Resale value:** Not as strong as Toyota, but good—especially for Fit and Vezel.
-
-### Popular Honda models in Kenya (and why people buy them)
-- **Honda Fit (Jazz)** – Super practical hatchback, low fuel use, good for town.
-- **Honda Vezel (HR-V)** – Compact SUV, stylish, efficient (many are hybrids).
-- **Honda CR-V** – Spacious family SUV; good comfort and safety.
-- **Honda Civic** – Sporty sedan/hatch; strong performance and good build.
-- **Honda Accord** – Bigger sedan; comfort + power, but slightly higher running costs.
-
-### Engines & transmissions (what to know before buying)
-- **Petrol engines (1.3–2.4L common):** Generally strong and efficient.
-- **Hybrid options:** Vezel/Insight—excellent on fuel, but check hybrid battery condition.
-- **CVT gearboxes:** Common on Fit/Vezel. Smooth and economical, but require **proper CVT fluid** and gentle driving (avoid abuse/overheating).
-
-### Ownership in Kenya: pros and cons
-**Pros**
-- Good fuel economy (especially Fit/Vezel)
-- Generally reliable
-- Comfortable interiors and good features for the price
-
-**Cons**
-- Some parts are slightly pricier/less common than Toyota depending on model
-- CVT requires correct maintenance (wrong ATF can cause issues)
-- Low ground clearance on some models (Fit/Civic) for rough roads—needs careful driving
-
-### If you tell me this, I’ll recommend the best Honda for you
-1) Budget in KES  
-2) Use: town only / mixed / upcountry roads  
-3) Preferred body type: hatch / sedan / SUV  
-4) Automatic or manual, and whether you’re open to **hybrid**', '2026-04-12 13:19:44.013116+00');
-INSERT INTO public.messages VALUES (5, 1, 'user', 'I want a mclaren can i get it', '2026-04-12 13:20:09.566543+00');
-INSERT INTO public.messages VALUES (6, 1, 'assistant', 'Yes—you can get a McLaren in Kenya, but it’s usually **special-order/import** (they’re rare locally).
-
-What I need from you to advise properly:
-1) **Model**: 570S/540C, 600LT, 720S, GT, Artura (hybrid), etc.  
-2) **Budget** (KES)  
-3) **New or used**, and preferred year range  
-4) **Timeline**: how soon you want it
-
-Quick reality check for Kenya:
-- **Cost:** Expect **very high landed cost** because KRA taxes (often **60–80% of CIF/CRSP-based valuation**) + shipping/insurance.
-- **Practicality:** Low ground clearance—Nairobi bumps/ramps need extreme care.
-- **Support:** Maintenance is possible, but you’ll rely on **specialist garages** and sometimes **importing parts**.
-
-If you share the model/year and budget, I can estimate:
-- likely **import duties/taxes range**
-- **total landed cost in KES**
-- best source (UK/Japan/UAE) and what to check before buying.
-
-You can also WhatsApp AutoElite Motors: **+254 700 000 000** and we can help source and import one for you.', '2026-04-12 13:20:15.635838+00');
-INSERT INTO public.messages VALUES (7, 2, 'user', 'How does kra get paid after i purchase my car', '2026-04-12 14:01:41.52067+00');
-INSERT INTO public.messages VALUES (8, 2, 'assistant', 'KRA gets paid in different ways depending on whether your car is **locally registered already** or you’re **importing it**.
-
-## 1) If you’re buying a car already in Kenya (already registered: Kxx…)
-- **KRA is not paid again at purchase.** The import taxes (Import Duty, Excise, VAT, IDF, RDL) were paid when the car first entered Kenya.
-- What you pay during purchase is mainly:
-  - **NTSA transfer fees** (online via eCitizen/NTSA TIMS)
-  - **Inspection (if required)**
-  - **Insurance**
-  - Any dealer charges/financing charges
-
-So for a local purchase, KRA doesn’t “collect” money just because ownership has changed.
-
-## 2) If you’re importing a car (or buying a fresh import before registration)
-This is where KRA gets paid.
-
-**How payment happens:**
-- A **clearing agent/importer** generates a tax assessment on **KRA iCMS** (based on CRSP and the declared/shipping values).
-- The payable amounts (duty/taxes/levies) are paid via the bank/payment channels linked to KRA using the **PRN/payment slip**.
-- Once paid, KRA updates the entry to **released/cleared**, then the car can exit the port/ICD and proceed to registration.
-
-**In short:** you typically pay the clearing agent, and they remit to KRA using the official KRA payment reference—don’t pay “cash” to anyone claiming it’s KRA.
-
-## Quick safety checks (avoid being conned)
-- Ask for the **KRA entry number** and **official payment receipt/PRN**.
-- Confirm the car is cleared: you should have **release documents** from customs/clearing.
-
-If you tell me whether your car is **already registered (Kxx)** or **a fresh import**, and whether you bought from **a dealer or private seller**, I’ll tell you exactly what payments you should expect and what documents to insist on.', '2026-04-12 14:01:51.918304+00');
-INSERT INTO public.messages VALUES (9, 3, 'user', 'Best car under KES 2M', '2026-04-12 14:35:06.914707+00');
-INSERT INTO public.messages VALUES (10, 3, 'assistant', 'Under **KES 2M** in Kenya, the “best” choice depends on what you value most (running costs, ground clearance, comfort, power). Here are the top picks that consistently give the best value locally:
-
-## 1) Best all-rounder (reliability + comfort): **Toyota Harrier (2010–2013) 2.0/2.4**
-- Smooth ride, solid resale value, easy maintenance
-- Good for Nairobi + upcountry trips (though not a hardcore off-roader)
-- Typical fuel: ~9–12 km/L depending on engine/traffic
-
-## 2) Best practical family wagon (space + economy): **Toyota Fielder (2014–2016) 1.5**
-- Very fuel efficient, cheap parts, big boot
-- Ideal daily + family use; easy to service anywhere
-- Fuel: often ~14–18 km/L on a healthy unit
-
-## 3) Best compact “city SUV” value: **Nissan X-Trail (2010–2014) 2.0**
-- Spacious, good ground clearance, comfortable
-- Watch for CVT condition (must be smooth, with proper fluid history)
-
-## 4) Best sporty drive (performance): **Subaru Forester (SH) 2008–2012 2.0 NA**
-- Great handling + AWD confidence on bad roads
-- Cons: higher fuel use than Toyota; check for overheating history and oil leaks
-
-## 5) Cheapest to run overall (city car): **Honda Fit (2014–2017) 1.3**
-- Very low fuel consumption, reliable if maintained
-- Ensure transmission is healthy (especially hybrid/GP variants)
-
----
-
-### Quick recommendation (if you tell me your use case)
-To recommend the single best option for you, share:
-1) Mainly **city** or **highway/upcountry**?  
-2) Need **SUV ground clearance** or okay with a wagon/hatch?  
-3) Max monthly fuel budget?  
-4) 5-seater or 7-seater?
-
-If you’d like, I can also suggest **3 specific models + years** that fit your needs and what to check before buying (Kenya-specific), or you can WhatsApp AutoElite Motors on **+254 700 000 000** and we’ll propose available options under **KES 2M**.', '2026-04-12 14:35:17.419049+00');
-INSERT INTO public.messages VALUES (11, 4, 'user', 'I want to talk to owner', '2026-04-18 14:23:39.505392+00');
-INSERT INTO public.messages VALUES (12, 4, 'assistant', 'Habari! Karibu. To speak with the **owner/management** at **AutoElite Motors**, please use either of these:
-
-- **Call / WhatsApp:** **+254 700 234 567**
-- **Email:** **sales@autoelitemotors.co.ke**
-
-If you prefer, you can also visit us at **Ngong Road, Nairobi (next to Prestige Plaza)** during **Mon–Sat 8AM–6PM | Sun 10AM–4PM**.
-
-Share your **name** and what it’s about (buying, selling, complaint, partnership), and I’ll guide you on the fastest way to get you connected.', '2026-04-18 14:23:42.635357+00');
-INSERT INTO public.messages VALUES (13, 4, 'user', 'My name is John', '2026-04-18 14:24:03.077938+00');
-INSERT INTO public.messages VALUES (14, 4, 'assistant', 'Habari John, karibu sana.
-
-To get you connected to the **owner/management**, please send this message on **WhatsApp: +254 700 234 567** (or call the same number):
-
-**Template to copy-paste:**
-- *Hi AutoElite, my name is John. I’d like to speak with the owner/management regarding [brief reason]. What’s the best time to reach them? My number is [your phone].*
-
-Tell me what it’s about (e.g., **car inquiry, financing, complaint, partnership**) and I’ll help you phrase it vizuri.', '2026-04-18 14:24:05.485747+00');
-
-
---
--- Data for Name: newsletter_subscribers; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.newsletter_subscribers VALUES (1, 'test@example.com', '2026-04-12 15:14:57.092609', 'active');
-
-
---
 -- Data for Name: services; Type: TABLE DATA; Schema: public; Owner: -
---
 
 INSERT INTO public.services VALUES (1, 'Premium Car Sales', 'We offer an exclusive selection of verified premium vehicles from the world''s leading manufacturers. Every car in our inventory undergoes a rigorous inspection process.', 'Car', true, 1, '2026-04-12 11:09:50.926308');
 INSERT INTO public.services VALUES (2, 'Vehicle Sourcing', 'Can''t find your dream car in our current inventory? Our global network allows us to source specific makes, models, and configurations to your exact requirements.', 'Search', true, 2, '2026-04-12 11:09:50.926308');
@@ -287,16 +97,12 @@ INSERT INTO public.services VALUES (7, 'After-Sale Guidance', 'Our relationship 
 INSERT INTO public.services VALUES (8, 'Import Assistance', 'We specialize in sourcing and importing premium vehicles from international markets. Full customs clearance and compliance management included.', 'Globe', true, 8, '2026-04-12 11:09:50.926308');
 
 
---
 -- Data for Name: site_settings; Type: TABLE DATA; Schema: public; Owner: -
---
 
 INSERT INTO public.site_settings VALUES (1, 'Elite Motors', 'Kenya''s Premier Luxury Car Dealership', '+254 734336227', '254734336227', 'sales@autoelitemotors.co.ke', 'Ngong Road, next to Prestige Plaza', 'Nairobi', 'https://maps.google.com/?q=4820+Automotive+Boulevard+Los+Angeles+CA', 'https://facebook.com/autoelitemotors', 'https://instagram.com/autoelitemotors', 'https://twitter.com/autoelitemotors', 'https://youtube.com/@autoelitemotors', 'Mon-Sat: 8:00AM - 7:00PM  |  Sunday: 10:00AM - 5:00PM', 'Drive the Extraordinary', 'Premium vehicles sourced from Japan and beyond — delivered in Nairobi', 'About AutoElite Motors', 'For over 15 years, AutoElite Motors has been Los Angeles''s most trusted premium car dealership. We specialize in luxury, performance, and premium vehicles, offering an unparalleled buying experience with full transparency, competitive pricing, and exceptional after-sale support. Our passionate team of automotive experts is dedicated to matching every customer with their perfect vehicle.', 'https://images.unsplash.com/photo-1562141961-9e5cf8f9c0f0?w=800', 12, 80, 2400, '2026-04-12 14:41:04.501', 'Kenya', '', '', 'KES', 130, NULL, NULL, NULL, NULL, NULL, NULL, 'Nairobi''s home for premium Japanese imports & luxury cars', 'true', NULL, 'AutoElite Motors — Premium car dealership in Nairobi, Kenya. Japanese imports, luxury vehicles, KRA import assistance.', '', NULL, '#DC2626', '{"SUV":"","Luxury":"","Sports":"","Sedan":""}', 'true');
 
 
---
 -- Data for Name: team_members; Type: TABLE DATA; Schema: public; Owner: -
---
 
 INSERT INTO public.team_members VALUES (1, 'Michael Sterling', 'Founder & Principal Dealer', 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400', 'Luxury & Exotic Vehicles', '+1 (555) 234-5678', '+15552345678', 'michael@autoelitemotors.com', 'With over 20 years in the premium automotive industry, Michael founded AutoElite Motors with a vision to redefine the car buying experience in Los Angeles. His passion for extraordinary vehicles and commitment to customer satisfaction are the cornerstones of our success.', 1, '2026-04-12 11:09:50.921157');
 INSERT INTO public.team_members VALUES (2, 'Alexandra Brooks', 'Senior Sales Consultant', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400', 'European Luxury Brands', '+1 (555) 234-5679', '+15552345679', 'alexandra@autoelitemotors.com', 'Alexandra brings 12 years of luxury automotive experience, specializing in European marques including Mercedes-Benz, BMW, Audi, and Porsche. Her encyclopedic knowledge of these vehicles ensures every client finds their perfect match.', 2, '2026-04-12 11:09:50.921157');
@@ -304,9 +110,7 @@ INSERT INTO public.team_members VALUES (3, 'James Park', 'Finance Manager', 'htt
 INSERT INTO public.team_members VALUES (4, 'Sofia Martinez', 'Client Relations Manager', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400', 'After-Sale Support & Trade-Ins', '+1 (555) 234-5681', '+15552345681', 'sofia@autoelitemotors.com', 'Sofia ensures that every client who leaves our showroom becomes a lifelong partner. From trade-in valuations to post-purchase support, she is dedicated to creating an exceptional experience that extends well beyond the sale.', 4, '2026-04-12 11:09:50.921157');
 
 
---
 -- Data for Name: testimonials; Type: TABLE DATA; Schema: public; Owner: -
---
 
 INSERT INTO public.testimonials VALUES (1, 'James Richardson', 'Beverly Hills, CA', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200', 5, 'Absolutely incredible experience. The team at AutoElite went above and beyond to find me the perfect Mercedes GLE. Professional, transparent, and genuinely passionate about cars. I will never buy from anywhere else.', 'Mercedes-Benz GLE 350', true, '2026-04-12 11:09:50.914688');
 INSERT INTO public.testimonials VALUES (2, 'Sarah Mitchell', 'Malibu, CA', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200', 5, 'From the moment I walked in, I felt like a valued customer. No pressure tactics, just genuine expertise and honest advice. My Range Rover Sport is everything I dreamed of. The financing process was smooth and fair.', 'Range Rover Sport HSE', true, '2026-04-12 11:09:50.914688');
@@ -316,162 +120,58 @@ INSERT INTO public.testimonials VALUES (5, 'David Thompson', 'Pasadena, CA', 'ht
 INSERT INTO public.testimonials VALUES (6, 'Amanda Chen', 'Studio City, CA', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200', 5, 'My husband and I both bought our cars from AutoElite within the same month. The family discount was a wonderful touch, but honestly the transparency and professionalism is why we keep coming back.', 'Toyota Alphard Executive Lounge', true, '2026-04-12 11:09:50.914688');
 
 
---
--- Data for Name: trade_ins; Type: TABLE DATA; Schema: public; Owner: -
---
-
-
-
---
--- Name: admin_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.admin_users_id_seq', 1, true);
-
-
---
--- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.audit_logs_id_seq', 1, true);
-
-
---
 -- Name: blog_posts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
 SELECT pg_catalog.setval('public.blog_posts_id_seq', 3, true);
 
 
---
--- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.bookings_id_seq', 1, false);
-
-
---
--- Name: car_views_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.car_views_id_seq', 1, false);
-
-
---
 -- Name: cars_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
 SELECT pg_catalog.setval('public.cars_id_seq', 15, true);
 
 
---
 -- Name: chatbot_knowledge_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
 SELECT pg_catalog.setval('public.chatbot_knowledge_id_seq', 2, true);
 
 
---
--- Name: conversations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.conversations_id_seq', 4, true);
-
-
---
--- Name: financing_inquiries_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.financing_inquiries_id_seq', 1, false);
-
-
---
--- Name: inquiries_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.inquiries_id_seq', 2, true);
-
-
---
--- Name: messages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.messages_id_seq', 14, true);
-
-
---
--- Name: negotiations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.negotiations_id_seq', 1, true);
-
-
---
--- Name: newsletter_subscribers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.newsletter_subscribers_id_seq', 1, true);
-
-
---
--- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.notifications_id_seq', 1, true);
-
-
---
--- Name: page_views_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.page_views_id_seq', 9, true);
-
-
---
 -- Name: services_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
 SELECT pg_catalog.setval('public.services_id_seq', 8, true);
 
 
---
 -- Name: site_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
 SELECT pg_catalog.setval('public.site_settings_id_seq', 1, true);
 
 
---
 -- Name: team_members_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
 SELECT pg_catalog.setval('public.team_members_id_seq', 4, true);
 
 
---
 -- Name: testimonials_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
 SELECT pg_catalog.setval('public.testimonials_id_seq', 6, true);
 
 
---
--- Name: trade_ins_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
 
-SELECT pg_catalog.setval('public.trade_ins_id_seq', 1, false);
+-- ============================================================================
+-- Default admin user
+-- ============================================================================
+-- Username: admin
+-- Password: admin123  ← CHANGE THIS IMMEDIATELY after first login (Settings → Account)
+-- Role:     owner (full access)
+-- ============================================================================
 
+INSERT INTO admin_users (id, username, password_hash, name, created_at, last_login_at, role, is_active, email)
+VALUES (1, 'admin', 'c65852e7b6466c4e7d83e74ab427cf2b549ab1cd05a46fe860c375c9139c6852', 'Administrator', NOW(), NULL, 'owner', 'true', NULL)
+ON CONFLICT (username) DO NOTHING;
 
---
--- Name: visitor_sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
+SELECT pg_catalog.setval('public.admin_users_id_seq', 1, true);
 
-SELECT pg_catalog.setval('public.visitor_sessions_id_seq', 2, true);
+COMMIT;
 
-
---
--- PostgreSQL database dump complete
---
-
-\unrestrict XmcHBkgx8Y0ce7O4caSSA4bNXZ0fauCkIGZe3Brhd2cVGC1DCwbzy6S9rQgggks
-
+-- ============================================================================
+-- Done! Visit your site and log in at /admin/login
+-- ============================================================================
