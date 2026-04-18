@@ -13,6 +13,7 @@ import { useCreateBooking, useListCars } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSearch } from "wouter";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -32,6 +33,7 @@ export default function TestDrive() {
   const { toast } = useToast();
   const createBooking = useCreateBooking();
   const { data: inventoryData } = useListCars({ limit: 100 });
+  const { formatPrice } = useCurrency();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -101,7 +103,7 @@ export default function TestDrive() {
                       <SelectContent>
                         {inventoryData?.cars.map(car => (
                           <SelectItem key={car.id} value={car.id.toString()}>
-                            {car.year} {car.make} {car.model} {car.trim} - ${(car.price).toLocaleString()}
+                            {car.year} {car.make} {car.model} {car.trim} — {formatPrice(car.price)}
                           </SelectItem>
                         ))}
                       </SelectContent>
