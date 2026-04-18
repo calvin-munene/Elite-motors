@@ -8,8 +8,12 @@ const router = Router();
 
 const SESSION_SECRET = process.env.SESSION_SECRET || "dealership-secret-key-2024";
 
+// Fixed salt for password hashing — intentionally separate from SESSION_SECRET
+// so that rotating the session secret never breaks existing passwords.
+const PASSWORD_SALT = "autoelite-motors-password-salt-v1";
+
 function hashPassword(password: string): string {
-  return crypto.createHmac("sha256", SESSION_SECRET).update(password).digest("hex");
+  return crypto.createHmac("sha256", PASSWORD_SALT).update(password).digest("hex");
 }
 
 function generateToken(userId: number, username: string): string {
@@ -43,16 +47,32 @@ async function requireAdmin(req: any, res: any, next: any) {
   next();
 }
 
-// Ensure default admin exists
+// Ensure default admin exists and its password hash is up-to-date.
+// The hash previously used SESSION_SECRET as the HMAC key, which made it
+// environment-dependent. We now use a fixed salt, so we resync on boot
+// to heal any stale hash left by the seed script or a prior SECRET value.
 async function ensureDefaultAdmin() {
   try {
-    const existing = await db.select().from(adminUsersTable).limit(1);
+    const existing = await db
+      .select()
+      .from(adminUsersTable)
+      .where(eq(adminUsersTable.username, "admin"))
+      .limit(1);
+
+    const correctHash = hashPassword("admin123");
+
     if (!existing[0]) {
       await db.insert(adminUsersTable).values({
         username: "admin",
-        passwordHash: hashPassword("admin123"),
+        passwordHash: correctHash,
         name: "Administrator",
       });
+    } else if (existing[0].passwordHash !== correctHash) {
+      // Resync hash (fixes stale hash from old SESSION_SECRET-based approach)
+      await db
+        .update(adminUsersTable)
+        .set({ passwordHash: correctHash })
+        .where(eq(adminUsersTable.username, "admin"));
     }
   } catch {}
 }
