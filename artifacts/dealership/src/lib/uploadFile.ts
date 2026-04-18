@@ -1,51 +1,52 @@
 /**
- * Direct-to-GCS upload via presigned URL.
- *
- * 1. Asks the API for a presigned PUT URL.
- * 2. Uploads the file bytes directly to GCS.
- * 3. Returns the public-facing URL the frontend should store/display.
+ * Direct file upload to the API (stored in Postgres bytea).
+ * Works on every host with a Postgres DB — no external storage required.
  */
 export async function uploadFile(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<string> {
   const base = (import.meta as any).env?.BASE_URL || "/";
+  const MAX = 40 * 1024 * 1024;
+  if (file.size > MAX) {
+    throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max is 40MB.`);
+  }
 
-  const reqRes = await fetch(`${base}api/storage/uploads/request-url`, {
+  const dataBase64 = await fileToBase64(file, onProgress);
+
+  const res = await fetch(`${base}api/storage/uploads/direct`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      name: file.name,
-      size: file.size,
+      filename: file.name,
       contentType: file.type || "application/octet-stream",
+      dataBase64,
     }),
   });
-  if (!reqRes.ok) {
-    const j = await reqRes.json().catch(() => ({}));
-    throw new Error(j.error || `Failed to request upload URL (${reqRes.status})`);
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(j.error || `Upload failed (${res.status})`);
   }
-  const { uploadURL, objectPath } = (await reqRes.json()) as {
-    uploadURL: string;
-    objectPath: string;
-  };
+  const { url } = (await res.json()) as { url: string };
+  if (onProgress) onProgress(100);
+  return url;
+}
 
-  await new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadURL);
-    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-    if (onProgress) {
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-      };
-    }
-    xhr.onload = () =>
-      xhr.status >= 200 && xhr.status < 300
-        ? resolve()
-        : reject(new Error(`GCS upload failed (${xhr.status})`));
-    xhr.onerror = () => reject(new Error("Network error during upload"));
-    xhr.send(file);
+function fileToBase64(file: File, onProgress?: (pct: number) => void): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        // Reading is ~half the work; reserve 50-100% for the network upload.
+        onProgress(Math.round((e.loaded / e.total) * 50));
+      }
+    };
+    reader.onload = () => {
+      const result = reader.result as string;
+      const b64 = result.includes(",") ? result.split(",")[1] : result;
+      resolve(b64);
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
   });
-
-  // objectPath comes back as "/objects/<id>" — turn it into a public URL the frontend can render.
-  return `${base.replace(/\/$/, "")}/api/storage${objectPath}`;
 }

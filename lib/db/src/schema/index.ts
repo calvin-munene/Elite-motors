@@ -17,3 +17,4 @@ export * from "./visitors";
 export * from "./audit-logs";
 export * from "./notifications";
 export * from "./negotiations";
+export * from "./uploaded-files";
