@@ -28,6 +28,8 @@ services:
       PORT: 8080
       DATABASE_URL: postgresql://autoelite:autoelite_dev_password@db:5432/autoelite
       SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production-please-use-openssl-rand}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
       WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}

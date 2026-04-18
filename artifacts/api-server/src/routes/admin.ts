@@ -47,7 +47,13 @@ async function requireAdmin(req: any, res: any, next: any) {
   next();
 }
 
-// Ensure default admin exists and its password hash is up-to-date.
+// Default admin credentials — overridable via env vars for portability.
+// Set ADMIN_USERNAME and ADMIN_PASSWORD on your host (Render, Docker, etc.)
+// to provision a non-default account on first deploy.
+const DEFAULT_ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
+// Ensure the default admin exists and its password hash is up-to-date.
 // The hash previously used SESSION_SECRET as the HMAC key, which made it
 // environment-dependent. We now use a fixed salt, so we resync on boot
 // to heal any stale hash left by the seed script or a prior SECRET value.
@@ -56,23 +62,24 @@ async function ensureDefaultAdmin() {
     const existing = await db
       .select()
       .from(adminUsersTable)
-      .where(eq(adminUsersTable.username, "admin"))
+      .where(eq(adminUsersTable.username, DEFAULT_ADMIN_USERNAME))
       .limit(1);
 
-    const correctHash = hashPassword("admin123");
+    const correctHash = hashPassword(DEFAULT_ADMIN_PASSWORD);
 
     if (!existing[0]) {
       await db.insert(adminUsersTable).values({
-        username: "admin",
+        username: DEFAULT_ADMIN_USERNAME,
         passwordHash: correctHash,
         name: "Administrator",
       });
     } else if (existing[0].passwordHash !== correctHash) {
-      // Resync hash (fixes stale hash from old SESSION_SECRET-based approach)
+      // Resync hash so a changed ADMIN_PASSWORD takes effect on next boot,
+      // and any stale hash from the old SESSION_SECRET-based approach is healed.
       await db
         .update(adminUsersTable)
         .set({ passwordHash: correctHash })
-        .where(eq(adminUsersTable.username, "admin"));
+        .where(eq(adminUsersTable.username, DEFAULT_ADMIN_USERNAME));
     }
   } catch {}
 }
