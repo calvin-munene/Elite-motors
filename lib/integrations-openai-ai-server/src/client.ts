@@ -1,18 +1,22 @@
 import OpenAI from "openai";
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?",
-  );
-}
+// Prefer Replit's managed OpenAI integration when available,
+// otherwise fall back to the standard OPENAI_API_KEY (works on any host).
+const apiKey =
+  process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?",
+const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined;
+
+if (!apiKey) {
+  // Lazily warn instead of crashing the whole server at boot — AI features
+  // simply won't work, but the rest of the site (cars, blog, admin) will.
+  console.warn(
+    "[openai] No OPENAI_API_KEY (or AI_INTEGRATIONS_OPENAI_API_KEY) is set. " +
+      "AI features (chatbot, visual search, negotiation) will be disabled.",
   );
 }
 
 export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey: apiKey || "missing-key",
+  ...(baseURL ? { baseURL } : {}),
 });
