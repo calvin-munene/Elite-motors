@@ -44,6 +44,17 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
+# Replit-specific (not needed by buyers/deployers)
 .cache/
 .local/
+.replit
+.replitignore
+.upm/
+replit.md
+skills-lock.json
+.agents/
+
+# Dev-only tools (not needed for production)
+artifacts/mockup-sandbox/
+push-to-github.sh
+attached_assets/
