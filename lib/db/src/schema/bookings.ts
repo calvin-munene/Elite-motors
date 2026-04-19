@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -18,6 +18,15 @@ export const bookingsTable = pgTable("bookings", {
   assignedAdminId: integer("assigned_admin_id"),
   leadScore: integer("lead_score").default(50),
   leadLevel: text("lead_level").default("warm"),
+  // Refundable deposit (PayPal)
+  depositAmount: numeric("deposit_amount", { precision: 10, scale: 2 }),
+  depositCurrency: text("deposit_currency").default("USD"),
+  paymentStatus: text("payment_status").notNull().default("none"), // none | pending | paid | refunded | failed | cancelled
+  paypalOrderId: text("paypal_order_id"),
+  paypalCaptureId: text("paypal_capture_id"),
+  paypalRefundId: text("paypal_refund_id"),
+  paymentCompletedAt: timestamp("payment_completed_at"),
+  refundedAt: timestamp("refunded_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

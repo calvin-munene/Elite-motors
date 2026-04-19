@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSearch } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { PayPalDeposit } from "@/components/PayPalDeposit";
+import { ShieldCheck, Lock, RotateCcw } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -34,6 +36,8 @@ export default function TestDrive() {
   const createBooking = useCreateBooking();
   const { data: inventoryData } = useListCars({ limit: 100 });
   const { formatPrice } = useCurrency();
+  const [createdBookingId, setCreatedBookingId] = useState<number | null>(null);
+  const [createdBookingLabel, setCreatedBookingLabel] = useState<string>("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,19 +54,24 @@ export default function TestDrive() {
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const selectedCar = inventoryData?.cars.find(c => c.id === values.carId);
-    
-    createBooking.mutate({ 
+    const carLabel = selectedCar ? `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}` : "your test drive";
+
+    createBooking.mutate({
       data: {
         ...values,
         carTitle: selectedCar ? `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}` : undefined
-      } 
+      }
     }, {
-      onSuccess: () => {
+      onSuccess: (created: any) => {
         toast({
-          title: "Test Drive Requested",
-          description: "We will contact you shortly to confirm your appointment.",
+          title: "Booking Saved",
+          description: "Now secure your slot with a fully refundable deposit below.",
         });
-        form.reset();
+        const id = created?.id ?? created?.data?.id;
+        if (id) {
+          setCreatedBookingId(Number(id));
+          setCreatedBookingLabel(carLabel);
+        }
       },
       onError: () => {
         toast({
@@ -175,17 +184,71 @@ export default function TestDrive() {
                   </FormItem>
                 )} />
 
-                <Button type="submit" className="w-full h-14 uppercase tracking-widest font-bold text-sm" disabled={createBooking.isPending}>
-                  {createBooking.isPending ? "Submitting..." : "Request Appointment"}
+                {!createdBookingId && (
+                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 flex gap-3 text-sm text-emerald-100">
+                    <ShieldCheck className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-white">Refundable deposit</span> — to secure your slot we'll
+                      ask for a small deposit via PayPal after this step. It is <span className="font-bold">100% refunded</span>{" "}
+                      after the test-drive meet-up at our showroom.
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full h-14 uppercase tracking-widest font-bold text-sm"
+                  disabled={createBooking.isPending || !!createdBookingId}
+                >
+                  {createBooking.isPending
+                    ? "Submitting..."
+                    : createdBookingId
+                    ? "Booking Saved ✓"
+                    : "Continue to Deposit"}
                 </Button>
               </form>
             </Form>
           </div>
+
+          {createdBookingId && (
+            <div className="mt-8 bg-card border border-emerald-500/30 p-8 rounded-lg">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 mb-3">
+                  <Lock className="w-6 h-6 text-emerald-400" />
+                </div>
+                <h2 className="font-serif text-2xl font-bold text-white mb-1">Secure Your Slot</h2>
+                <p className="text-gray-400 text-sm">
+                  Refundable deposit for {createdBookingLabel}
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-3 mb-6 text-sm">
+                <Mini icon={<ShieldCheck className="w-4 h-4 text-emerald-400" />} label="100% refundable" />
+                <Mini icon={<Lock className="w-4 h-4 text-emerald-400" />} label="Encrypted by PayPal" />
+                <Mini icon={<RotateCcw className="w-4 h-4 text-emerald-400" />} label="Refund after meetup" />
+              </div>
+              <PayPalDeposit bookingId={createdBookingId} onSuccess={() => {}} />
+              <p className="text-center text-xs text-gray-500 mt-4">
+                Don't want to pay online?{" "}
+                <a href="https://wa.me/254734336227" className="text-emerald-300 hover:underline" target="_blank" rel="noopener noreferrer">
+                  Confirm on WhatsApp instead
+                </a>
+              </p>
+            </div>
+          )}
         </div>
       </main>
 
       <Footer />
       <FloatingWhatsApp />
+    </div>
+  );
+}
+
+function Mini({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex items-center gap-2 bg-background/50 border border-white/5 rounded-md px-3 py-2 text-gray-300">
+      {icon}
+      <span>{label}</span>
     </div>
   );
 }

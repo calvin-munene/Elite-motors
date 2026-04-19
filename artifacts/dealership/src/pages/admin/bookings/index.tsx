@@ -6,18 +6,60 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { DetailModal, DetailField } from "@/components/admin/DetailModal";
-import { Eye } from "lucide-react";
+import { Eye, RotateCcw, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 export default function AdminBookings() {
   const { data: bookingsData, refetch } = useListBookings({ limit: 100 });
   const updateBooking = useUpdateBooking();
   const { toast } = useToast();
   const [selected, setSelected] = useState<any>(null);
+  const [refundingId, setRefundingId] = useState<number | null>(null);
 
   const handleStatusChange = (id: number, status: string) => {
     updateBooking.mutate({ id, data: { status } }, {
       onSuccess: () => { toast({ title: "Status updated" }); refetch(); }
     });
+  };
+
+  const handleRefund = async (bookingId: number) => {
+    if (!confirm("Refund this customer's deposit? This action is logged with PayPal and cannot be undone.")) return;
+    setRefundingId(bookingId);
+    try {
+      const token = localStorage.getItem("admin_token");
+      const r = await fetch(`/api/admin/paypal/refund/${bookingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+      const j = await r.json();
+      if (!r.ok || !j.success) {
+        toast({ title: "Refund failed", description: j.error || "PayPal returned an error", variant: "destructive" });
+      } else {
+        toast({ title: "Refund issued", description: `Refund ID: ${j.refundId}` });
+        refetch();
+      }
+    } catch (e: any) {
+      toast({ title: "Refund failed", description: e?.message || "Network error", variant: "destructive" });
+    } finally {
+      setRefundingId(null);
+    }
+  };
+
+  const payBadge = (s: string | null | undefined) => {
+    if (!s || s === "none") return null;
+    const map: Record<string, { cls: string; icon: any; label: string }> = {
+      pending: { cls: "bg-amber-500/10 text-amber-300 border-amber-500/30", icon: Clock, label: "Deposit Pending" },
+      paid: { cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30", icon: CheckCircle2, label: "Deposit Paid" },
+      refunded: { cls: "bg-blue-500/10 text-blue-300 border-blue-500/30", icon: RotateCcw, label: "Refunded" },
+      failed: { cls: "bg-red-500/10 text-red-300 border-red-500/30", icon: XCircle, label: "Failed" },
+      cancelled: { cls: "bg-gray-500/10 text-gray-300 border-gray-500/30", icon: XCircle, label: "Cancelled" },
+    };
+    const info = map[s] || map.pending;
+    const Icon = info.icon;
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border ${info.cls}`}>
+        <Icon className="w-3 h-3" /> {info.label}
+      </span>
+    );
   };
 
   const statusStyle = (s: string) =>
@@ -41,13 +83,14 @@ export default function AdminBookings() {
               <TableHead className="text-gray-400">Vehicle</TableHead>
               <TableHead className="text-gray-400">Preferred Date</TableHead>
               <TableHead className="text-gray-400">Status</TableHead>
+              <TableHead className="text-gray-400">Deposit</TableHead>
               <TableHead className="text-gray-400">Details</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!bookingsData?.bookings?.length ? (
               <TableRow className="border-white/5">
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">No bookings found.</TableCell>
+                <TableCell colSpan={7} className="text-center py-8 text-gray-500">No bookings found.</TableCell>
               </TableRow>
             ) : (
               bookingsData.bookings.map((b) => (
@@ -78,6 +121,28 @@ export default function AdminBookings() {
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1.5">
+                      {payBadge((b as any).paymentStatus) || (
+                        <span className="text-xs text-gray-600">—</span>
+                      )}
+                      {(b as any).depositAmountUsd && (
+                        <span className="text-[10px] text-gray-500">
+                          ${Number((b as any).depositAmountUsd).toFixed(2)}
+                        </span>
+                      )}
+                      {(b as any).paymentStatus === "paid" && (
+                        <button
+                          onClick={() => handleRefund(b.id)}
+                          disabled={refundingId === b.id}
+                          className="inline-flex items-center gap-1 text-[11px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          {refundingId === b.id ? "Refunding..." : "Refund deposit"}
+                        </button>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <button

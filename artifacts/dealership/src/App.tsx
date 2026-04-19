@@ -36,6 +36,8 @@ import Compare from "@/pages/compare";
 import Wishlist from "@/pages/wishlist";
 import KRACalculator from "@/pages/kra-calculator";
 import VisualSearch from "@/pages/visual-search";
+import BookingPaymentSuccess from "@/pages/booking-payment-success";
+import BookingPaymentCancelled from "@/pages/booking-payment-cancelled";
 
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/index";
@@ -122,6 +124,8 @@ function Router() {
         <Route path="/wishlist" component={Wishlist} />
         <Route path="/kra-calculator" component={KRACalculator} />
         <Route path="/visual-search" component={VisualSearch} />
+        <Route path="/booking/payment-success" component={BookingPaymentSuccess} />
+        <Route path="/booking/payment-cancelled" component={BookingPaymentCancelled} />
 
         <Route path="/admin/login" component={AdminLogin} />
         <Route path="/admin" component={AdminDashboard} />
